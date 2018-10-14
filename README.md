@@ -1,6 +1,6 @@
 # DLKNLP
 Day-by-day Line-by-line Keras-based Korean NLP
-* Sentence classification: From data construction to BiLSTM self-attention
+### Sentence classification: From data construction to BiLSTM self-attention
 
 ## Contents (to be updated)
 0. Corpus labelling
