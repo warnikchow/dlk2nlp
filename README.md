@@ -8,8 +8,8 @@
 [1. Data preprocessing](https://github.com/warnikchow/dlk2nlp#1-data-preprocessing)</br>
 [2. One-hot encoding and sentence vector](https://github.com/warnikchow/dlk2nlp#2-one-hot-encoding-and-sentence-vector)</br>
 [3. TF-IDF and basic classifiers](https://github.com/warnikchow/dlk2nlp#3-tf-idf-and-basic-classifiers)</br>
-[4. NN classifier using Keras](https://github.com/warnikchow/dlk2nlp#4-nn-classifier-using-keras)</br>
-[5. Dense word vector embedding and Document vectors](https://github.com/warnikchow/dlk2nlp#5-dense-word-vector-embedding-and-document-vectors)</br>
+[4. Dense word embedding and document vectors](https://github.com/warnikchow/dlk2nlp#4-dense-word-embedding-and-document-vectors)</br>
+[5. NN classifier using Keras](https://github.com/warnikchow/dlk2nlp#5-nn-classifier-using-keras)</br>
 [6. CNN-based sentence classification](https://github.com/warnikchow/dlk2nlp#6-cnn-based-sentence-classification)</br>
 [7. RNN (BiLSTM)-based sentence classification](https://github.com/warnikchow/dlk2nlp#7-rnn-bilstm-based-sentence-classification)</br>
 [8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
@@ -93,7 +93,29 @@ The aforementioned sentence representation can be directly utilized with the bas
 * 앞서 구한 one-hot encoding이나 TF-IDF로도 이러한 evaluation을 손쉽게 할 수 있습니다. 이 때 evaluation을 위한 prediction은 앞서 말한 10%의 test data로 하게 되지요. 위의 두 모델로도, 상당히 높은 정확도를 가진 모델을 얻을 수 있음을 알 수 있습니다. 그치만 아직도 찝찝한 점은, 컴퓨터가 단어를 세고만 있지 그 단어들이 문장 내에서, 작게는 컨텍스트에서 어떤 역할을 하는지 아무것도 모르는 것 같다는 점입니다. 
 
 ## 4. Dense word embedding and document vectors
+
+* 여태까지 한 내용을 세줄요약해 보면</br>
+1. 전산언어학은 기계로 하여금 사람 말을 잘 알아먹도록 하는 학문</br>
+2. 단어 및 문장을 모델링하는 기본적인 방법으로 one-hot encoding (BoW) 및 TF-IDF가 있음</br>
+3. 한국어는 교착어적 특징 때문에 어절 단위 분석보다 형태소 단위 분석이 효과적임</br>
+이렇습니다. 깔끔하네요... 이외에도 수치화된 문장을 분류하는 알고리즘에는 SVM 이나 LR 등이 있다, 그 성능을 평가하는 measure에는 accuracy나 F1 score 등이 있다 ... 라는 것도 간략히 말하고 지나왔죠. 
+* 그런데 이러한 방법론들은 분석해야 할 데이터가 많아지고 사전의 크기가 커질수록 computation의 문제에 당면하게 됩니다. 특히나 데이터를 몰빵해넣고 병렬연산으로 승부하는 딥러닝의 경우 더욱 그렇지요. 예컨대 30 개의 형태소로 된 문장을 벡터 sequence로 나타내어 recurrent neural network 같은 시스템으로 요약하고자 할 때, 딕셔너리 사이즈가 10만이라면, 10만 x 30이라는 무시무시한 사이즈의 행렬이 문장 하나를 표현하여 인풋으로 들어가게 되는거죠. 물론 아까 보았듯 사용하는 벡터의 크기는 조절할 수 있고, 각 벡터가 각 단어를 표현하는 것이 아주 명확하긴 하지만요.
+* 이럴 때 유용하게 사용되는 개념이 2013년 태동한 word2vec, 혹은 dense low-dimension embedding 입니다. 등장 목적이 위와 같다고는 할 수 없지만, 2006년부터 촉발된 딥러닝 아키텍쳐와 맞물려 사용되며 문장 분석의 패러다임 자체를 바꾸고 있죠. Word2vec, GloVe, fastText에 대한 설명을 간략하게만이라도 해보려 합니다.
+
+The term **Word2Vec** is very intuitive, and it converts the words, which are discrete (and were sparsely represented so far), into the numerics that are close to the continuousness. Since there are a bunch of terrific articles on the topic outside, in English, a review on word2vec and its related models are discussed mainly in Korean.
+
+* word2vec이라는 말은 상당히 직관적입니다. 말 그대로 이산적 개념인 단어를 수치적 개념인 벡터로 바꿔 준다는 의미이죠. 사실 one-hot encoding 역시 고차원의 벡터를 만들어준다는 점을 생각하면 어폐가 있긴 합니다. 그래서 두 개념의 차이를 벡터가 sparse한지 (드문드문하게 nonzero인 성분이 있는지), 아니면 dense한지 (유클리드 공간에서처럼 빽빽이 들어차 있는지)를 차이점으로 봅니다. 물론 word2vec은 후자를 의미하죠.
+* 당연한 얘기겠지만, 어떤 방식의 워드 임베딩이든, 임베딩 벡터 셋을 트레이닝하는 과정에서 어떤 원칙 (혹은 제약조건)을 주냐에 따라 결과물로 나오는 벡터들 간의 관계가 달라지게 됩니다. 예컨대 아무 제약 조건도 주지 않는 one-hot encoding의 경우, 모든 단어가 평등합니다. 아무리 비슷해 보이는 단어들이라도 1이 위치하는 엔트리가 다르다면 아무 상관없는 단어인 것이나 다름없게 되는 것이죠. distributional semantic에 대한 고려는 one-hot vector에 들어 있지 않은 겁니다.
+* 모든 sparse vector가 one-hot vector같이 엔트리 간 equivalence를 지니는 건 아닙니다. 오히려 희소한 케이스에 가깝죠. 가중치를 곱해준 TF-IDF만 해도, 개별 단어를 모델링하지는 않지만 어떤 분포적인 특성이 반영되게 됩니다. binary이지만 multi-hot encoding을 차용하는 boolean distributional semantics의 경우, 의미론에서 얘기하는 feature의 개념이 등장하여, taxonomy 상 상위 위계에 해당하는 단어의 embedding이 하위 위계의 단어의 embedding에 포함되게 하는 방식으로 트레이닝이 됩니다. 아마도 벡터 사이즈는 one-hot보다는 줄어들겠죠? 벡터들 간의 distance measure가 euclidean이 아닌 어떤 이산적인 개념이 된다는 건 challenging하긴 합니다만, 언어가 기본적으로 이산적인 속성을 버릴 수 없다는 생각을 갖고 있는 저로썬 매우 매력적이라는 생각을 했습니다.
+
+* 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠.  또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
+* 이러한 관점에서 볼 때, word2vec은 상당히 매력적인 시도였다 볼 수 있겠습니다. 혹자는 '비슷한 context에 등장하는 녀석들은 실제로도 비슷한/관련 있는 녀석들일 가능성이 높다는 distributional semantics의 원칙을 수치적 제약으로 잘 지키면서 one-hot vector을 저차원에 pca한 결과물'이라고 하더군요. 예컨대 '너는 나쁜 아이야'와 '너는 착한 아이야'라는 문장들을 볼 때, '나쁜'과 '착한'이 실제로 저런 류의 context를 많이 공유한다 생각해 보면, 둘이 아주 관계가 없는 단어들은 아니다, 어느정도 유기적이다, 그런 판단을 할 수 있겠죠? word2vec의 큰 철학은 이렇습니다. 
+* 컨텍스트를 주고 center word를 추론하는 CBOW와 그 반대인 skip-gram (SG) 모두 word2vec의 최적화와 관련된 알고리듬인데요, SG가 여러 태스크에서 더 성능이 좋음이 보여진 바 있고 실제로도 더 자주 활용됩니다. 수식으로 나타내면 아래와 같게 되죠. 물론 이 계산을 가능하게 한 hierarchical softmax나 negative sampling 등의 개념도 무시할 수는 없지만요. 자세한 설명은 논문들에 잘 나와 있으니 이쯤 하고, 다음으로는 word2vec을 이용해 할 수 있는 게 뭔지 알아보도록 하겠습니다.
+
 ## 5. NN classifier using Keras
+
+
+
 ## 6. CNN-based sentence classification
 ## 7. RNN (BiLSTM)-based sentence classification
 ## 8. Character embedding
