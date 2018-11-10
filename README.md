@@ -92,7 +92,7 @@ The aforementioned sentence representation can be directly utilized with the bas
 * 이 때 accuracy는 전체 테스트 인풋 중 분류에 성공한 input의 비율이 될 겁니다. 그런데 함정이 있다면, 데이터 편중을 배제하기 어렵단 것이죠. 예컨대 데이터셋의 90퍼센트가 긍정문이고 10퍼센트만 부정문이라면, 공정한 트레이닝 및 테스트가 되었다고 하기 어렵겠죠. 그래서 binary classification에서 많이 사용되는 F-measure의 경우는 precision과 recall이라는, 각각 '1이라고 했을 때 정말 맞을 확률'과 '전체 맞은 것들 중 1이라고 했을 확률'을 생각하여 이들의 조화평균을 구해주는 방향으로 accuracy의 함정을 보정합니다. 물론 단순 조화평균이 아닌 별도 parameter을 주기도 하고, multiclass에 대해선 따로 class별 weight를 정의하기도 하지만요.
 * 앞서 구한 one-hot encoding이나 TF-IDF로도 이러한 evaluation을 손쉽게 할 수 있습니다. 이 때 evaluation을 위한 prediction은 앞서 말한 10%의 test data로 하게 되지요. 위의 두 모델로도, 상당히 높은 정확도를 가진 모델을 얻을 수 있음을 알 수 있습니다. 그치만 아직도 찝찝한 점은, 컴퓨터가 단어를 세고만 있지 그 단어들이 문장 내에서, 작게는 컨텍스트에서 어떤 역할을 하는지 아무것도 모르는 것 같다는 점입니다. 
 
-## 4. Dense word mbedding and document vectors
+## 4. Dense word embedding and document vectors
 ## 5. NN classifier using Keras
 ## 6. CNN-based sentence classification
 ## 7. RNN (BiLSTM)-based sentence classification
