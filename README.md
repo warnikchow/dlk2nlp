@@ -1,11 +1,12 @@
 # DLK2NLP
 ### Day-by-day Line-by-line Keras-based Korean NLP
 ## Sentence classification: From data construction to BiLSTM self-attention
+* 문장 분류 task를 중심으로 본 한국어 NLP 튜토리얼입니다. 본 튜토리얼에 사용된 컨텐츠 일부는 저자가 운영하는 [페이스북 페이지](https://www.facebook.com/nobodybelongs/notes/)에 기고한 글에서 발췌하였음을 명시합니다. 
 
 ## Contents (to be updated)
 0. Corpus labelling
 1. Data preprocessing
-2. One-hot encoding and basic classifiers
+2. One-hot encoding and sentence vector
 3. TF-IDF and basic classifiers
 4. NN classifier using Keras
 5. Dense word vector embedding and Document vectors
@@ -57,3 +58,17 @@ The last part of data preprocessing is tokenizing the sentence into morphemes, a
 
 * 데이터를 읽어들였으니, 이제 형태소 분리를 통해 어절이라는 큰 뭉텅이들을 좀 더 세밀한 단위로 나눠 보도록 하겠습니다. 음절 기반 방법, 혹은 자소 분해 방법들도 요즘 많이 사용되지만, 형태소 기반의 문장 표현이 아무래도 교착어인 한국어에서 가장 기본적인 접근 방법이 아닌가 싶습니다. 
 * 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다.
+
+## 2. One-hot encoding and sentence vector
+
+The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Thus, it it 
+
+* 전산 언어학은 기본적으로 컴퓨터한테 사람이 말하는 것, 즉 자연어를 이해시키는 과정이라고 할 수 있겠습니다. 그래서 우리는 컴퓨터로 하여금, '아 진짜 우리 말을 이해하진 못해도, 대충 어떤 내용인지 판단은 할 수 있게 해 보자' 생각을 하게 됩니다. 그렇게 해서 나오게 된 표현법 (representation) 중 가장 기본적으로 사용되고, 매우 강력한 편이라 아직까지도 많은 곳에서 사용하고 있는 방법론은 바로 단어의 1-hot encoding입니다. 
+* 이 방법을 쓰기 위해선 '우리가 생각할 단어 전체 set = Dict'을 생각해야 합니다. 가장 먼저 생각해볼 수 있는 건 우리가 사용할 코퍼스에 있는 모든 단어들의 모임이죠. 코퍼스의 사이즈가 커질수록 Dict도 커질 것이고, 물론 단어는 countably infinite하게 만들어낼 수 있지만 여기선 '그나마 자주 쓰이는 녀석들'로 생각합시다. 
+* 이 Dict가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(Dict) = N 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 N-dim의 1-hot vector로 표현할 수 있게 되는 겁니다.
+
+What should we do with these large-dimensional vectors? The first thing we can think of is a feature called *Bag-of-Words* (BoW). The literal meaning is a bag which contains words, and for Korean, it might be either word (*eojeol*), morpheme, characters, or alphabets (*Jamo*). Since we've decided only to use morphemes for the sparse representations, but these can be replaced with whatever feature you want to adopt. BoW approach is very simple; it just assigns 1 to the entry that corresponds with a word, 
+
+* 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 N-dim 1-hot vector들의 sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
+* 예컨대 "신이 그댈 사랑해"라는 문장이 있고 '신이' = \[1 0 0 0 0 0 \], '그댈' = \[0 0 1 0 0 0\], '사랑해' = \[0 0 0 0 0 1\]로 표현된다고 합시다. 여기서 코퍼스는 여섯 개의 토큰 (단어구성단위 라고 합시다 일단)으로 구성된 아주 작은 Dict를 yield했겠지요. 그렇다면 상기 문장은 \[1 0 1 0 0 1\]의 size(Dict)-dim binary vector로 표현되는 겁니다. 이렇게 해서 뭘 할 수 있냐구요? 이제 컴퓨터도 알아먹는 수치적 정보가 되었으니, 각종 분류기에 넣어 재미를 볼수 있죠! 
+* 물론 태클이 들어올 수 있습니다. 저 문장을 사실 '신' '이' 그대' '-ㄹ' '사랑' 'ㅎ' '-애' 로 나눠야 합당하지 않느냐, 한 문장에서 여러 번 카운트되는 단어들이 있으면 1-hot은 부당한 representation이 아니냐 뭐 그런... 첫 번째의 경우 우리가 문장을 자소로 분리하지 않는 Twitter analyzer을 썼기 때문에 어쩔 수 없는 부분입니다. 두 번째의 경우 다음 chater에서 더 다뤄 보도록 하겠습니다.
