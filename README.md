@@ -7,14 +7,14 @@
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
 [1. Data preprocessing](https://github.com/warnikchow/dlk2nlp#1-data-preprocessing)</br>
 [2. One-hot encoding and sentence vector](https://github.com/warnikchow/dlk2nlp#2-one-hot-encoding-and-sentence-vector)</br>
-3. TF-IDF and basic classifiers
-4. NN classifier using Keras
-5. Dense word vector embedding and Document vectors
-6. CNN-based sentence classification
-7. RNN (BiLSTM)-based sentence classification
-8. Character embedding
-9. Concatenation of CNN and RNN layers
-10. BiLSTM Self-attention
+[3. TF-IDF and basic classifiers](https://github.com/warnikchow/dlk2nlp#3-tf-idf-and-basic-classifiers)</br>
+[4. NN classifier using Keras](https://github.com/warnikchow/dlk2nlp#4-nn-classifier-using-keras)</br>
+[5. Dense word vector embedding and Document vectors](https://github.com/warnikchow/dlk2nlp#5-dense-word-vector-embedding-and-document-vectors)</br>
+[6. CNN-based sentence classification](https://github.com/warnikchow/dlk2nlp#6-cnn-based-sentence-classification)</br>
+[7. RNN (BiLSTM)-based sentence classification](https://github.com/warnikchow/dlk2nlp#7-rnn-bilstm-based-sentence-classification)</br>
+[8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
+[9. Concatenation of CNN and RNN layers](https://github.com/warnikchow/dlk2nlp#9-concatenation-of-cnn-and-rnn-layers)</br>
+[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)
 
 ## 0. Corpus labeling
 The most annoying and confusing process.
