@@ -4,9 +4,9 @@
 * 문장 분류 task를 중심으로 본 한국어 NLP 튜토리얼입니다. 본 튜토리얼에 사용된 컨텐츠 일부는 저자가 운영하는 [페이스북 페이지](https://www.facebook.com/nobodybelongs/notes/)에 기고한 글에서 발췌하였음을 명시합니다. 
 
 ## Contents (to be updated)
-0. Corpus labelling
-1. Data preprocessing
-2. One-hot encoding and sentence vector
+[0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)
+[1. Data preprocessing](https://github.com/warnikchow/dlk2nlp#1-data-preprocessing)
+[2. One-hot encoding and sentence vector](https://github.com/warnikchow/dlk2nlp#2-one-hot-encoding-and-sentence-vector)
 3. TF-IDF and basic classifiers
 4. NN classifier using Keras
 5. Dense word vector embedding and Document vectors
