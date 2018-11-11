@@ -63,22 +63,22 @@ The last part of data preprocessing is tokenizing the sentence into morphemes, a
 ## 2. One-hot encoding and sentence vector
 The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the **real meaning**, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is **one-hot encoding** that assigns 1 for only one entry if a specific word is given.
 
-* 전산 언어학은 기본적으로 컴퓨터한테 사람이 말하는 것, 즉 자연어를 이해시키는 과정이라고 할 수 있겠습니다. 그래서 우리는 컴퓨터로 하여금, '아 진짜 우리 말을 이해하진 못해도, 대충 어떤 내용인지 판단은 할 수 있게 해 보자' 생각을 하게 됩니다. 그렇게 해서 나오게 된 표현법 (representation) 중 가장 기본적으로 사용되고, 매우 강력한 편이라 아직까지도 많은 곳에서 사용하고 있는 방법론은 바로 단어의 1-hot encoding입니다. 
+* 전산 언어학은 기본적으로 컴퓨터한테 사람이 말하는 것, 즉 자연어를 이해시키는 과정이라고 할 수 있겠습니다. 그래서 우리는 컴퓨터로 하여금, '아 진짜 우리 말을 이해하진 못해도, 대충 어떤 내용인지 판단은 할 수 있게 해 보자' 생각을 하게 됩니다. 그렇게 해서 나오게 된 표현법 (representation) 중 가장 기본적으로 사용되고, 매우 강력한 편이라 아직까지도 많은 곳에서 사용하고 있는 방법론은 바로 단어의 one-hot encoding입니다. 
 * 이 방법을 쓰기 위해선 '우리가 생각할 단어 전체 set = Dict'을 생각해야 합니다. 가장 먼저 생각해볼 수 있는 건 우리가 사용할 코퍼스에 있는 모든 단어들의 모임이죠. 코퍼스의 사이즈가 커질수록 Dict도 커질 것이고, 물론 단어는 countably infinite하게 만들어낼 수 있지만 여기선 '그나마 자주 쓰이는 녀석들'로 생각합시다. 
-* 이 Dict가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(Dict) = N 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 N-dim의 1-hot vector로 표현할 수 있게 되는 겁니다.
+* 이 Dict가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(Dict) = V 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 V-dim의 one-hot vector로 표현할 수 있게 되는 겁니다.
 
 What should we do with these large-dimensional vectors? The first thing we can think of is a feature called **Bag-of-Words** (BoW). The literal meaning is a bag which contains words, and for Korean, it might be either words (*eojeol*), morphemes, characters, or alphabets (*Jamo*). Though we've decided only to use morphemes for the sparse representations, these can be replaced with whatever feature you want to adopt. BoW approach is very simple; it just assigns 1 to the corresponding entry if the word in the sentence. This can provide the computer a numerical value which represents the sentence! The code utilizing [NLTK](https://github.com/nltk/nltk) is as below.
 
-* 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 N-dim 1-hot vector들의 OR-sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
+* 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 V-dim one-hot vector들의 OR-sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
 * 예컨대 "신이 그댈 사랑해"라는 문장이 있고 '신이' = \[1 0 0 0 0 0 \], '그댈' = \[0 0 1 0 0 0\], '사랑해' = \[0 0 0 0 0 1\]로 표현된다고 합시다. 여기서 코퍼스는 여섯 개의 토큰 (단어구성단위 라고 합시다 일단)으로 구성된 아주 작은 Dict를 yield했겠지요. 그렇다면 상기 문장은 \[1 0 1 0 0 1\]의 size(Dict)-dim binary vector로 표현되는 겁니다. 이렇게 해서 뭘 할 수 있냐구요? 이제 컴퓨터도 알아먹는 수치적 정보가 되었으니, 각종 분류기에 넣어 재미를 볼수 있죠! 
-* 물론 태클이 들어올 수 있습니다. 저 문장을 사실 '신' '이' 그대' '-ㄹ' '사랑' 'ㅎ' '-애' 로 나눠야 합당하지 않느냐, 한 문장에서 여러 번 카운트되는 단어들이 있으면 1-hot은 부당한 representation이 아니냐 뭐 그런... 첫 번째의 경우 우리가 문장을 자소로 분리하지 않는 Twitter analyzer을 썼기 때문에 어쩔 수 없는 부분입니다. 두 번째의 경우 다음 chater에서 더 다뤄 보도록 하겠습니다.
+* 물론 태클이 들어올 수 있습니다. 저 문장을 사실 '신' '이' 그대' '-ㄹ' '사랑' 'ㅎ' '-애' 로 나눠야 합당하지 않느냐, 한 문장에서 여러 번 카운트되는 단어들이 있으면 one-hot은 부당한 representation이 아니냐 뭐 그런... 첫 번째의 경우 우리가 문장을 자소로 분리하지 않는 Twitter analyzer을 썼기 때문에 어쩔 수 없는 부분입니다. 두 번째의 경우 다음 chater에서 더 다뤄 보도록 하겠습니다.
 
 ## 3. TF-IDF and basic classifiers
 Previously, we've introduced one-hot encoding of the words and the sparse sentence representation based on BoW model. However, despite its transparency and conciseness, one-hot encoding does not convey the word frequency regarding the document. This is where the concept of **term frequency** (TF) came out; the word frequency is taken into account to convey the relative importance of each word. For instance, the word 'I' and 'you' in the sentence *I love you, I want you, I need you* may be assigned the word frequency of 3 instead of 1 which is assigned to the verbs.
 
 * 앞서 bag-of-words 모델을 통해 문장을 1-hot vector들의 합(여기서 합은 Boolean의 or에 해당)으로 나타내어 컴퓨터가 알아먹을 만한 어떤 수치로 나타내는 과정을 설명했습니다. 이는 전통적이고 직관적이며 상당히 강력한 방법이기도 합니다.
 * 하지만 이 방법의 문제는 문장 내에 등장하는 모든 단어들을, 등장 횟수에 상관없이 공평하게 대한다는 것입니다. 예컨대 "나는 아브라함의 하나님이요 이삭의 하나님이요 야곱의 하나님이로라 하신 것을 읽어 보지 못하였느냐 (전 종교가 없습니다! 그냥 예문을 찾고싶었을뿐)" 라는 문장이 하고 싶은 말은 누가 봐도 내가 하나님이란 것 같은데 아브라함이니 이삭이니 하는 것들과 동급으로 1로 카운트되면 얼마나 억울하겠습니까. 
-* 이러한 문제를 해결하기 위해 우린 일종의 normalization으로 볼 수 있는 term frequency, 즉 문장의 전체 word중 해당 word의 빈도를 고려해 문장을 벡터화해 볼 수 있습니다. 위의 문장에선 '하나님'이 3/N (형태소분석한 결과를 모두 카운트하기 귀찮으니 N으로 퉁칩시다)의 값을 부여받고 나머지 녀석들은 1/N의 값을 부여받게 되겠죠.
+* 이러한 문제를 해결하기 위해 우린 일종의 normalization으로 볼 수 있는 term frequency, 즉 문장의 전체 word중 해당 word의 빈도를 고려해 문장을 벡터화해 볼 수 있습니다. 위의 문장에선 '하나님'이 3/X (형태소분석한 결과를 모두 카운트하기 귀찮으니 X로 퉁칩시다)의 값을 부여받고 나머지 녀석들은 1/X의 값을 부여받게 되겠죠.
 
 <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
 (image from https://skymind.ai/wiki/bagofwords-tf-idf)
@@ -89,7 +89,7 @@ But the problem is that the high frequency does not indicate that importance of 
 * 그래서 우리가 생각해볼 수 있는 건 '다른 문장들에도 많이 나오는 녀석엔 가중치를 조금 주면 어떨까?'하는 것입니다. 예컨대 전체 문장 중 해당 문장이 나오는 비율의 역수 같은 걸 곱해준다면? 이런 생각으로 나온 녀석이 바로 inverse document frequency입니다. 약간의 smoothing factor을 추가하자면, test corpus에 해당 term이 없는 경우를 대비해 분모에 1을 더해주고, corpus size가 방대해질 때를 고려해 log를 입히는 정도?
 * 상기한 두 개의 요소를 곱해 BoW를 개량한 모델이 바로 TF-IDF (term frequency-inverse document frequency) 입니다. 문서 분류에 아직도 활발히 사용되는 모델이지요. 
 
-The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; 
+The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; the accuracy refers to the fraction of correct intances out of the whole data. Understanding the meaning of the value is intuitive, but the flaw is that it does not convey how incorrect the model predicts for the class of data with a small portion. For example, if the data consists of binary label and the portion is 9:1 yielding an imbalance, than the accuracy may reach 90% just by a simple guess of a class with the larger volume. The better solution can be obtained by using F1-score, which considers the true negatives and the false positives. The following code displays how the sparse vectors we previously obtained are trained and predicted, with both an accuracy and an F1-score.
 
 * 지금까지  tf-idf를 이용한 sentence 의 sparse representation에 대해 얘기했지요. 이제 구체적으로 이 녀석들을 문장 분류에 이용해먹을 만한 방법들에 대해 생각해봐야 하는데요, 그 중 하나가 이 글의 task로 제시된 분류 (classification)입니다. 
 * 사실 데이터 집합(문장들)과 레이블 집합(긍정문/부정문, 의문문별 분류, 토픽별 분류 등)으로 된 트레이닝 데이터를 input으로 넣어, 별도의 테스트 데이터로 얻어진 prediction와 정답의 비교를 통해 그 네트워크의 accuracy, F-measure 등을 evaluate하여 성능을 평가한다는 점은 많은 분야에서 사용되는 분류기 evaluation의 구조입니다. 
@@ -131,9 +131,14 @@ Up to date, many advanced models of word vectors which base on word2vec have bee
 
 ## 5. NN classifier using Keras
 
+In the first few chapters, we've demonstrated how the corpus we've adopted is preprocessed, featurized, trained and predicted with the sparse sentence encodings. However, since we've obtained the dense word embeddings for the morphemes (as we've obtained for one-hot encoded words), it's plausible to extend it to the sentence vector, for instance by summation. 
+
 * 앞서 one-hot encoding과 tf-idf로 문장을 수치화하는 방법, 그리고 그것이 sparse vector이라는 것까지 말씀드린 바 있습니다. 정보가 discrete하다는 것은 기계에게나 사람에게나 매우 직관적으로 다가오기에, 문장의 분류에 있어 굉장히 유용하게 사용된다는 것두요. 하지만 지난 몇 시간 동안 dense word vector들을 얘기하는 동안, 그 친구들을 문장 수치화에 이용할 수 있지 않을까 생각하는 분도 분명 계실 겁니다. word2vec을 제안한 사람들의 머릿속을 들여다볼 수는 없지만, 결과적으로 그 등장이 문장 임베딩에 있어 하나의 패러다임 전환이 되었죠.  
 * “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
+
+This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself  yields a variety of values. This might be advantageous to the tasks such as sentiment analysis, which is largely determined by some polarity items or the emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
+
 * 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
 
 ## 6. CNN-based sentence classification
