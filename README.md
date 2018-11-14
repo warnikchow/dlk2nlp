@@ -4,8 +4,8 @@
 * 문장 분류 task를 중심으로 본 한국어 NLP 튜토리얼입니다. 본 튜토리얼에 사용된 컨텐츠 일부는 [페이스북 페이지](https://www.facebook.com/nobodybelongs/notes/)에 기고했던 글에서 발췌하였음을 명시합니다. 
 
 ## Requirements
-### The versions can be replaced depending on the environment
-Keras, konlpy (refer the documentation), nltk, numpy, scikit-learn, tensorflow-gpu
+### The recommended versions are in *Requirements.txt*, but can be replaced depending on the environment
+Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk, numpy, scikit-learn, tensorflow-gpu
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
