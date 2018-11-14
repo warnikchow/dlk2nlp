@@ -57,6 +57,20 @@ fci_label= [int(t[0]) for t in fci]</code></pre>
 
 The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
 
+<pre><code>from konlpy.tag import Twitter
+pos_tagger = Twitter()
+
+def twit_token(doc):
+    x = [t[0] for t in pos_tagger.pos(doc)]
+    return ' '.join(x)
+
+len_train = int(np.floor(len(fci_data)*0.9))
+fci_data_train = fci_data[:len_train]
+fci_data_test  = fci_data[len_train:]
+
+fci_token_train = [twit_token(row) for row in fci_data_train]
+fci_token_test  = [twit_token(row) for row in fci_data_test]</code></pre>
+
 * 데이터를 읽어들였으니, 이제 형태소 분리를 통해 어절이라는 큰 뭉텅이들을 좀 더 세밀한 단위로 나눠 보도록 하겠습니다. 음절 기반 방법, 혹은 자소 분해 방법들도 요즘 많이 사용되지만, 형태소 기반의 문장 표현이 아무래도 교착어인 한국어에서 가장 기본적인 접근 방법이 아닌가 싶습니다. 
 * 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다.
 
