@@ -216,7 +216,7 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')</code></pre>
 
 * Word2vec은 이런 저차원 임베딩의 포문을 열었을 뿐이고 (for문 아닙니다) 이후로 수많은 베리에이션이 등장했습니다. 이 때 사용하는 알고리듬이 skip-gram이란 점이 크게 변하지는 않았지만, 다양한 objective를 설정하며 특정 task에 효율적으로 적용할 수 있는 vector들이 등장했죠.
 * 가장 많이 알려진 두 베리에이션은 GloVe와 fastText입니다. 전자는 word2vec 이전에 사용되던 sparse representation 중 하나인 co-occurrence matrix의 개념을 training objective에 활용하여 보다 global하고 syntactic한 특징도 word vector에 반영할 수 있게 한 것이고, 후자는 word2vec과 사실상 같은 알고리즘이지만 그 트레이닝 효율을 거의 몇백배 수준으로 끌어올려 빠르게 트레이닝하면서도 task 성능은 엇비슷하게 유지할 수 있게 하는 알고리듬입니다. 또한 fastText는 subword n-gram model을 차용하여, word 단위로 나뉘어지지 않은, 단어 내의 character n-gram들도 일종의 word로 보고 그 분포를 전체 트레이닝에 고려한다는 특징을 가지고 있지요. 이를 통해 morphologically rich한 언어들에서도 효율적으로 활용 가능하다는 점을 논문에서 어필하고 있구요.
-* GloVe의 경우 stanford에서 제공하는 wiki/twitter기반 pre-trained vector가 있으며 (https://nlp.stanford.edu/projects/glove/), fastText의 경우는 꽤 많은 언어로 pre-trained vector을 제공하지만 학습 속도가 굉장히 빨라 저 같은 경우는 갖고 있는 코퍼스로 새로 training하기도 합니다. Subword n-gram이 교착어인 한국어에도 굉장히 유용하여, 저 같은 경우는 fastText로 트레이닝된 word vector set을 character embedding에 사용하고 있구요. 약 200만 문장의 드라마 스크립트를 통해 학습한 word vector dictionary는 [다음의 주소](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor)에서 제공됩니다.
+* GloVe의 경우 stanford에서 제공하는 [wiki/twitter기반 pre-trained vector](https://nlp.stanford.edu/projects/glove/)가 있으며, fastText의 경우는 꽤 많은 언어로 pre-trained vector을 제공하지만 학습 속도가 굉장히 빨라 저 같은 경우는 갖고 있는 코퍼스로 새로 training하기도 합니다. Subword n-gram이 교착어인 한국어에도 굉장히 유용하여, 저 같은 경우는 fastText로 트레이닝된 word vector set을 character embedding에 사용하고 있구요. 약 200만 문장의 드라마 스크립트를 통해 학습한 word vector dictionary는 [다음의 주소](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor)에서 제공됩니다.
 * 앞서도 말했지만, 26개의 알파벳만 있으면 되는 영어와 달리, 한국어는 2500개 상당의 자모 조합이 있어 one-hot encoding을 직접적으로 character embedding에 사용하기 쉽지 않죠. 이럴 때 유용하게 사용할 수 있는 것이 저차원으로 임베딩된 character vector입니다. 어느 정도 분포적인 특징을 반영할 수 있으면서도 computational하게 부담을 덜 줄 수 있는 그런 feature로 사용할 수 있는 것입니다. 물론 형태소, 어절 모두 임베딩의 대상이 될 수 있습니다. 어떤 것을 선택할지는 형태소 분석기의 유무, 구동 및 개발 환경 등에 따라 자유롭게 선택하면 될 것입니다. 
 
 ## 5. Document vectors and NN classifier
@@ -247,6 +247,19 @@ This kind of sentence encoding gives us quite a rich representation of the sente
 
 However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
+<pre><code>def featurize_cnn(corpus,wdim,maxlen):
+    conv_total = np.zeros((len(corpus),maxlen,wdim,1))
+    for i in range(len(corpus)):
+        if i%1000 ==0:
+            print(i)
+        s = corpus[i]
+        for j in range(len(s)):
+            if s[-j-1] in model_ft and j<maxlen:
+                conv_total[i][-j-1,:,0]=model_ft[s[-j-1]]
+    return conv_total
+
+fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)</code></pre>
+
 <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
 (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
 
@@ -256,6 +269,67 @@ However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs
 ---
 
 There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
+
+<pre><code>import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.1
+set_session(tf.Session(config=config))
+from keras.models import Sequential
+import keras.layers as layers
+from keras import optimizers
+adam_half = optimizers.Adam(lr=0.0005)
+from keras.callbacks import ModelCheckpoint
+
+from keras.callbacks import Callback
+from sklearn import metrics
+class Metricsf1macro(Callback):
+    def on_train_begin(self, logs={}):
+        self.val_f1s = []
+        self.val_recalls = []
+        self.val_precisions = []
+        self.val_f1s_w = []
+        self.val_recalls_w = []
+        self.val_precisions_w = []
+    def on_epoch_end(self, epoch, logs={}):
+        val_predict = np.asarray(self.model.predict(self.validation_data[0]))
+        val_predict = np.argmax(val_predict,axis=1)
+        val_targ = self.validation_data[1]
+        _val_f1 = metrics.f1_score(val_targ, val_predict, average="macro")
+        _val_f1_w = metrics.f1_score(val_targ, val_predict, average="weighted")
+        _val_recall = metrics.recall_score(val_targ, val_predict, average="macro")
+        _val_recall_w = metrics.recall_score(val_targ, val_predict, average="weighted")
+        _val_precision = metrics.precision_score(val_targ, val_predict, average="macro")
+        _val_precision_w = metrics.precision_score(val_targ, val_predict, average="weighted")
+        self.val_f1s.append(_val_f1)
+        self.val_recalls.append(_val_recall)
+        self.val_precisions.append(_val_precision)
+        self.val_f1s_w.append(_val_f1_w)
+        self.val_recalls_w.append(_val_recall_w)
+        self.val_precisions_w.append(_val_precision_w)
+        print("— val_f1: %f — val_precision: %f — val_recall: %f"%(_val_f1, _val_precision, _val_recall))
+        print("— val_f1_w: %f — val_precision_w: %f — val_recall_w: %f"%(_val_f1_w, _val_precision_w, _val_recall_w))
+
+metricsf1macro = Metricsf1macro()
+
+from sklearn.utils import class_weight
+class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_label), fci_label)
+def validate_cnn(result,y,filters,hidden_dim,cw,filename):
+    model = Sequential()
+    model.add(layers.Conv2D(filters,(3,len(result[0][0])),activation= 'relu',input_shape = (len(result[0]),len(result[0][0]),1)))
+    model.add(layers.MaxPooling2D((2,1)))
+    model.add(layers.Conv2D(filters,(3,1),activation='relu'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(hidden_dim,activation='relu'))
+    model.add(layers.Dense(int(max(y)+1), activation='softmax'))
+    model.summary()
+    model.compile(optimizer=adam_half, loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    filepath=filename+"-{epoch:02d}-{val_acc:.4f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, mode='max')
+    callbacks_list = [metricsf1macro,checkpoint]
+    model.fit(result,y,validation_split=0.1,epochs=30,batch_size=16,callbacks=callbacks_list,class_weight=cw)
+
+validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')</code></pre>
 
 * 일단 image를 cnn에 적용하는 과정을 패러미터화하면, 채널, 필터, 컨벌루션레이어, 윈도우, 풀링 정도로 요약할 수 있습니다. 채널은 앞서 말했듯 rgb 같이 몇 개의 요소로 나타내냐이며 필터는 얼마나 병렬로 처리할거냐, 컨벌루션레이어 수는 추상화 과정을 몇번 거칠거냐, 윈도우는 어떤 식으로 각 컨벌루션 레이어를 훑을거냐, 풀링은 컨벌루션 레이어를 훑은 값들에서 중요한 요소들을 어떻게 취사선택할거냐? 이정도로 나타낼 수 있겠네요.
 * 이미지의 cnn은 그래서 일반적으로 3채널, 많은 필터 (>64?), 다층 컨벌루션 레이어, 상하좌우로 stride되는 3 by 3 혹은 5 by 5 window 등으로 요약될 수 있습니다. 물론 alexnet, vgg, yolo 등 다양한 아키텍쳐들이 있고, 모두 특색이 있겠지만, 기본적으론 저렇습니다. 하지만 word vector sequence에서 상하좌우로 움직이는 window가 어떤 의미가 있을까요? 우리는 100dim의 벡터 각 엔트리에 어떤 성질의 성분들이 자리잡고 있는지 알지 못하며, 굳이 그런 성질을 지정해줄 필요도 느끼지 못하였습니다. 이미지는 두차원 모두가 semantic을 포함하지만, sentence에서 semantic이 의미가 있는 방향은 word vector가 pad되는 방향이니까요.
