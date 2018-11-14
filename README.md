@@ -197,7 +197,7 @@ metrics.f1_score(bi_pred,fci_label_test,average="weighted")
 precision_recall_fscore_support(bi_pred,fci_label_test)
 ```
 
-```python
+```properties
 # CONSOLE RESULT
 >>> accuracy_score(uni_pred,fci_label_test)
 0.7785129723141215
@@ -410,7 +410,7 @@ def validate_cnn(result,y,filters,hidden_dim,cw,filename):
 validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
 ```
 
-```python
+```properties
 # CONSOLE RESULT
 >>> validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
 _________________________________________________________________
@@ -513,7 +513,7 @@ def validate_bilstm(result,y,hidden_lstm,hidden_dim,cw,filename):
 validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 ```
 
-```python
+```properties
 # CONSOLE RESULT
 >>> validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 _________________________________________________________________
