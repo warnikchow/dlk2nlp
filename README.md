@@ -66,8 +66,10 @@ def twit_token(doc):
     return ' '.join(x)
 
 len_train = int(np.floor(len(fci_data)*0.9))
-fci_data_train = fci_data[:len_train]
-fci_data_test  = fci_data[len_train:]
+fci_data_train  = fci_data[:len_train]
+fci_data_test   = fci_data[len_train:]
+fci_label_train = fci_label[:len_train]
+fci_label_test  = fci_label[len_train:]
 
 fci_token_train = [twit_token(row) for row in fci_data_train]
 fci_token_test  = [twit_token(row) for row in fci_data_test]
@@ -127,13 +129,27 @@ def tfidf_featurizer(corpus_train,corpus_test):
     token_tfidf_bi_total_mat = token_tfidf_bi_total.toarray()
     return token_tfidf_total_mat,token_tfidf_bi_total_mat
 
-fci_tfidf,fci_tfidf_bi  = tfidf_featurizer(fci_token_train,fci_token_test)</code></pre>
+fci_tfidf,fci_tfidf_bi  = tfidf_featurizer(fci_token_train,fci_token_test)
+fci_tfidf_train    = fci_tfidf[:len_train]
+fci_tfidf_test     = fci_tfidf[len_train:]
+fci_tfidf_bi_train = fci_tfidf_bi[:len_train]
+fci_tfidf_bi_test  = fci_tfidf_bi[len_train:]</code></pre>
 
 * 그런데 또 문제가 있습니다. 바로 하나님이 소유를 나타내는 '의'와 동급이 돼버리는 겁니다. 아아, 이렇게 원통할 데가... 딱 봐도 '의'라는 녀석은 문장의 의미를 판단하는 데에 큰 도움을 주지 않을 것으로 보입니다. 다른 문장들에도 많이 나올 게 분명하거든요. 
 * 그래서 우리가 생각해볼 수 있는 건 '다른 문장들에도 많이 나오는 녀석엔 가중치를 조금 주면 어떨까?'하는 것입니다. 예컨대 전체 문장 중 해당 문장이 나오는 비율의 역수 같은 걸 곱해준다면? 이런 생각으로 나온 녀석이 바로 inverse document frequency입니다. 약간의 smoothing factor을 추가하자면, test corpus에 해당 term이 없는 경우를 대비해 분모에 1을 더해주고, corpus size가 방대해질 때를 고려해 log를 입히는 정도?
 * 상기한 두 개의 요소를 곱해 BoW를 개량한 모델이 바로 TF-IDF (term frequency-inverse document frequency) 입니다. 문서 분류에 아직도 활발히 사용되는 모델이지요. 
 
 The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; the accuracy refers to the fraction of correct intances out of the whole data. Understanding the meaning of the value is intuitive, but the flaw is that it does not convey how incorrect the model predicts for the class of data with a small portion. For example, if the data consists of binary label and the portion is 9:1 yielding an imbalance, than the accuracy may reach 90% just by a simple guess of a class with the larger volume. The better solution can be obtained by using F1-score, which considers the true negatives and the false positives. The following code displays how the sparse vectors we previously obtained are trained and predicted, with both an accuracy and an F1-score.
+
+<pre><code>from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+classifier_uni = LogisticRegression(random_state=1234)
+classifier_uni.fit(fci_tfidf_train,fci_label_train)
+print(classifier_uni.score(fci_tfidf_test,fci_label_test))
+
+classifier_bi = LogisticRegression(random_state=1234)
+classifier_bi.fit(fci_tfidf_bi_train,fci_label_train)
+print(classifier_bi.score(fci_tfidf_bi_test,fci_label_test))</code></pre>
 
 * 지금까지  tf-idf를 이용한 sentence 의 sparse representation에 대해 얘기했지요. 이제 구체적으로 이 녀석들을 문장 분류에 이용해먹을 만한 방법들에 대해 생각해봐야 하는데요, 그 중 하나가 이 글의 task로 제시된 분류 (classification)입니다. 
 * 사실 데이터 집합(문장들)과 레이블 집합(긍정문/부정문, 의문문별 분류, 토픽별 분류 등)으로 된 트레이닝 데이터를 input으로 넣어, 별도의 테스트 데이터로 얻어진 prediction와 정답의 비교를 통해 그 네트워크의 accuracy, F-measure 등을 evaluate하여 성능을 평가한다는 점은 많은 분야에서 사용되는 분류기 evaluation의 구조입니다. 
