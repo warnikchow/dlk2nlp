@@ -22,6 +22,8 @@ The most annoying and confusing process. Annotation guideline should be provided
 * 데이터를 만드는, 가장 귀찮은 과정입니다. 언어학적 직관은 1인분이기 때문에, 레이블링이 설득력을 얻기 위해서는 적어도 3명 이상의 1화자를 통한 레이블링으로 그 타당성을 검증해야 합니다 (아카데믹하게는...) 
 * 본 프로젝트에서는 7-class의 한국어 문장들이 분류에 사용됩니다.
 
+---
+
 The task is on classification; especially about extracting intention from a single utterance with the punctuation removed, which is suggested in [3i4k](https://github.com/warnikchow/3i4k). As the description displays, the corpus was partially hand-annotated and incorporates the utterances which are generated or semi-automatically collected. Total number of utterances reaches 57K, with each label denoting</br></br>
 **0: Fragments**</br>
 **1: Statement**</br>
@@ -44,6 +46,8 @@ For the next step, we should pay attention to how we can manage HANGUL, the lett
 * 아직 국제 무대에서는 크게 주목받지는 못하지만 그래도 한국어는 화자 수로만 봐도 세계 15위권 안에 들고 진짜로 몇 안되는 featural WS (갓종갓왕님 1인 프로젝트 덕분에 sign writing이나 소설을 위해 만들어진 언어 등과 같은 문자형식 지위를 획득 ...) 이며 promissive와 같은 독특한 particle 덕분에 언어학 서적에서도 왕왕 나오는 언어 및 문자체계를 갖고 있습니다. 또한 BTS의 떡상으로 전세계 사람들이 한국과 한국어와 한글을 알아서 Korean NLP가 국제무대에서도 Chinese나 Arabic만큼 중요하게 다뤄지는 때가 오기를... 혹은 통일을 기원하며 떡상을 기다리는... 
 * 여튼 여기서 한 얘기는 한국어 NLP에서 semantic하게 의미있는 작업을 위해서는 agglutinate된 block들을 morpheme 단위로 적절히 쪼개는 과정이 필수적이라는 얘기를 하고 있습니다. 저는 KoNLPy에 들어 있는 Twitter가 가볍고 자소분해를 하지 않아 많이 사용하는데, 여기서도 해당 모듈을 사용하도록 하겠습니다.
 
+---
+
 The most important part of Korean NLP lies in using Python 3.x. For the lower version, the encoding issue will bother you. That is, in Python 3.x, you don't have to perform an additional encoding for HANGUL to be read and written. [THIS](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt) is the file URL, which is a single *.txt* file that has the first column of the labels and the second column of the sentences. The dataset is split into train and test set of ratio 9:1 and the test set denotes last 10% of the corpus. The following code reads the dataset into the sentences and the labels, where the dataset is placed in the path 'data/fci.txt' for the directory you're running the console.
 
 <pre><code>def read_data(filename):
@@ -56,6 +60,8 @@ fci_data = [t[1] for t in fci]
 fci_label= [int(t[0]) for t in fci]</code></pre>
 
 * 한국어엔 역시 Python 3.x 죠.... 2.x로 한국어 인코딩은 지옥입니다 ㅠㅠ 처음에 아주 고생했네요. 어쨌든 제일 첫 삽은 data를 로딩하고 sentence와 label들로 나누는 과정입니다. 저는 [Lucy Park님의 유명한 슬라이드](https://www.lucypark.kr/docs/2015-pyconkr.pdf)에서 처음 봤지만, 외국 NLP 튜토리얼들에도 비슷하게 나와 있습니다. read_data로 파일을 읽어들이고, 탭(\t)으로 split한 후, data와 label array로 나누게 됩니다.
+
+---
 
 The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
 
@@ -89,6 +95,8 @@ The fundamental of computational linguistics lies in making machines understand 
 * 이 방법을 쓰기 위해선 '우리가 생각할 단어 전체 set = Dict'을 생각해야 합니다. 가장 먼저 생각해볼 수 있는 건 우리가 사용할 코퍼스에 있는 모든 단어들의 모임이죠. 코퍼스의 사이즈가 커질수록 Dict도 커질 것이고, 물론 단어는 countably infinite하게 만들어낼 수 있지만 여기선 '그나마 자주 쓰이는 녀석들'로 생각합시다. 
 * 이 Dict가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(Dict) = V 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 V-dim의 one-hot vector로 표현할 수 있게 되는 겁니다.
 
+---
+
 What should we do with these large-dimensional vectors? The first thing we can think of is a feature called **Bag-of-Words** (BoW). The literal meaning is a bag which contains words, and for Korean, it might be either words (*eojeol*), morphemes, characters, or alphabets (*Jamo*). Though we've decided only to use morphemes for the sparse representations, these can be replaced with whatever feature you want to adopt. BoW approach is straightforward; it just assigns 1 to the corresponding entry if the word in the sentence. This can provide the computer with a numerical value which represents the sentence! The code utilizing [NLTK](https://github.com/nltk/nltk) is as below.
 
 * 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 V-dim one-hot vector들의 OR-sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
@@ -98,12 +106,14 @@ What should we do with these large-dimensional vectors? The first thing we can t
 ## 3. TF-IDF and basic classifiers
 Previously, we've introduced one-hot encoding of the words and the sparse sentence representation based on the BoW model. However, despite its transparency and conciseness, one-hot encoding does not convey the word frequency regarding the document. This is where the concept of **term frequency** (TF) came out; the word frequency is taken into account to convey the relative importance of each word. For instance, the word 'I' and 'you' in the sentence *I love you, I want you, I need you* may be assigned the word frequency of 3 instead of 1 which is assigned to the verbs.
 
+<image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
+(image from https://skymind.ai/wiki/bagofwords-tf-idf)
+
 * 앞서 bag-of-words 모델을 통해 문장을 1-hot vector들의 합(여기서 합은 Boolean의 or에 해당)으로 나타내어 컴퓨터가 알아먹을 만한 어떤 수치로 나타내는 과정을 설명했습니다. 이는 전통적이고 직관적이며 상당히 강력한 방법이기도 합니다.
 * 하지만 이 방법의 문제는 문장 내에 등장하는 모든 단어들을, 등장 횟수에 상관없이 공평하게 대한다는 것입니다. 예컨대 "나는 아브라함의 하나님이요 이삭의 하나님이요 야곱의 하나님이로라 하신 것을 읽어 보지 못하였느냐 (전 종교가 없습니다! 그냥 예문을 찾고싶었을뿐)" 라는 문장이 하고 싶은 말은 누가 봐도 내가 하나님이란 것 같은데 아브라함이니 이삭이니 하는 것들과 동급으로 1로 카운트되면 얼마나 억울하겠습니까. 
 * 이러한 문제를 해결하기 위해 우린 일종의 normalization으로 볼 수 있는 term frequency, 즉 문장의 전체 word중 해당 word의 빈도를 고려해 문장을 벡터화해 볼 수 있습니다. 위의 문장에선 '하나님'이 3/X (형태소분석한 결과를 모두 카운트하기 귀찮으니 X로 퉁칩시다)의 값을 부여받고 나머지 녀석들은 1/X의 값을 부여받게 되겠죠.
 
-<image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
-(image from https://skymind.ai/wiki/bagofwords-tf-idf)
+---
 
 However, the problem is that the high frequency does not indicate that importance of the word. Thus, the concept of **inverse-document frequency** (IDF) is introduced, as a way of multiplying the inverse fraction of the frequency of the word among the whole documents. This prevents the overestimation of the functional words in many cases; to be honest, 'I' and 'you' are not as important as 'love', 'want' and 'need'. For instance, in the morpheme-based analysis, many particles in Korean are used repetitively in the sentences; those will be assigned a low IDF so that the lexical words are emphasized alternatively. The following code utilizing the scikit-learn library demonstrates how the **term frequency-inverse document frequency** (TF-IDF) is computed for our corpus.
 
@@ -141,6 +151,7 @@ fci_tfidf_bi_test  = fci_tfidf_bi[len_train:]</code></pre>
 * 그래서 우리가 생각해볼 수 있는 건 '다른 문장들에도 많이 나오는 녀석엔 가중치를 조금 주면 어떨까?'하는 것입니다. 예컨대 전체 문장 중 해당 문장이 나오는 비율의 역수 같은 걸 곱해준다면? 이런 생각으로 나온 녀석이 바로 inverse document frequency입니다. 약간의 smoothing factor을 추가하자면, test corpus에 해당 term이 없는 경우를 대비해 분모에 1을 더해주고, corpus size가 방대해질 때를 고려해 log를 입히는 정도?
 * 상기한 두 개의 요소를 곱해 BoW를 개량한 모델이 바로 TF-IDF (term frequency-inverse document frequency) 입니다. 문서 분류에 아직도 활발히 사용되는 모델이지요. 
 
+---
 The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; the accuracy refers to the fraction of correct instances out of the whole data. Understanding the meaning of the value is intuitive, but the flaw is that it does not convey how incorrect the model predicts for the class of data with a small portion. For example, if the data consists of the binary label and the portion is 9:1 yielding an imbalance, then the accuracy may reach 90% just by a simple guess of a class with the larger volume. The better solution can be obtained by using F1-score, which considers the true negatives and the false positives. The following code displays how the sparse vectors we previously obtained are trained and predicted, with both an accuracy and an F1-score.
 
 <pre><code>from sklearn.linear_model import LogisticRegression
@@ -186,6 +197,8 @@ However, considering the computation issue which has been very important up to t
 * 그런데 이러한 방법론들은 분석해야 할 데이터가 많아지고 사전의 크기가 커질수록 computation의 문제에 당면하게 됩니다. 특히나 데이터를 몰빵해넣고 병렬연산으로 승부하는 딥러닝의 경우 더욱 그렇지요. 예컨대 30 개의 형태소로 된 문장을 벡터 sequence로 나타내어 recurrent neural network 같은 시스템으로 요약하고자 할 때, 딕셔너리 사이즈가 10만이라면, 10만 x 30이라는 무시무시한 사이즈의 행렬이 문장 하나를 표현하여 인풋으로 들어가게 되는거죠. 물론 아까 보았듯 사용하는 벡터의 크기는 조절할 수 있고, 각 벡터가 각 단어를 표현하는 것이 아주 명확하긴 하지만요.
 * 이럴 때 유용하게 사용되는 개념이 2013년 태동한 word2vec, 혹은 dense low-dimension embedding 입니다. 등장 목적이 위와 같다고는 할 수 없지만, 2006년부터 촉발된 딥러닝 아키텍쳐와 맞물려 사용되며 문장 분석의 패러다임 자체를 바꾸고 있죠. Word2vec, GloVe, fastText에 대한 설명을 간략하게만이라도 해보려 합니다.
 
+---
+
 The term word2Vec is very intuitive, and it converts the words, which are discrete (and were sparsely represented so far), into the numerics that are close to the continuousness. Since there are a bunch of terrific articles on the topic outside, in English, a review on word2vec and its related models are discussed mainly in Korean.
 
 * word2vec이라는 말은 상당히 직관적입니다. 말 그대로 이산적 개념인 단어를 수치적 개념인 벡터로 바꿔 준다는 의미이죠. 사실 one-hot encoding 역시 고차원의 벡터를 만들어준다는 점을 생각하면 어폐가 있긴 합니다. 그래서 두 개념의 차이를 벡터가 sparse한지 (드문드문하게 nonzero인 성분이 있는지), 아니면 dense한지 (유클리드 공간에서처럼 빽빽이 들어차 있는지)를 차이점으로 봅니다. 물론 word2vec은 후자를 의미하죠.
@@ -193,6 +206,8 @@ The term word2Vec is very intuitive, and it converts the words, which are discre
 * 모든 sparse vector가 one-hot vector같이 엔트리 간 equivalence를 지니는 건 아닙니다. 오히려 희소한 케이스에 가깝죠. 가중치를 곱해준 TF-IDF만 해도, 개별 단어를 모델링하지는 않지만 어떤 분포적인 특성이 반영되게 됩니다. binary이지만 multi-hot encoding을 차용하는 boolean distributional semantics의 경우, 의미론에서 얘기하는 feature의 개념이 등장하여, taxonomy 상 상위 위계에 해당하는 단어의 embedding이 하위 위계의 단어의 embedding에 포함되게 하는 방식으로 트레이닝이 됩니다. 아마도 벡터 사이즈는 one-hot보다는 줄어들겠죠? 벡터들 간의 distance measure가 euclidean이 아닌 어떤 이산적인 개념이 된다는 건 challenging하긴 합니다만, 언어가 기본적으로 이산적인 속성을 버릴 수 없다는 생각을 갖고 있는 저로썬 매우 매력적이라는 생각을 했습니다.
 * 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠.  또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
 * 이러한 관점에서 볼 때, word2vec은 상당히 매력적인 시도였다 볼 수 있겠습니다. 혹자는 '비슷한 context에 등장하는 녀석들은 실제로도 비슷한/관련 있는 녀석들일 가능성이 높다는 distributional semantics의 원칙을 수치적 제약으로 잘 지키면서 one-hot vector을 저차원에 pca한 결과물'이라고 하더군요. 예컨대 '너는 나쁜 아이야'와 '너는 착한 아이야'라는 문장들을 볼 때, '나쁜'과 '착한'이 실제로 저런 류의 context를 많이 공유한다 생각해 보면, 둘이 아주 관계가 없는 단어들은 아니다, 어느정도 유기적이다, 그런 판단을 할 수 있겠죠? word2vec의 큰 철학은 이렇습니다. 컨텍스트를 주고 center word를 추론하는 CBOW와 그 반대인 skip-gram (SG) 모두 word2vec의 최적화와 관련된 알고리듬인데요, SG가 여러 태스크에서 더 성능이 좋음이 보여진 바 있고 실제로도 더 자주 활용됩니다. 
+
+---
 
 Up to date, many advanced models of word vectors which base on word2vec have been proposed. For instance, [GloVe](https://nlp.stanford.edu/pubs/glove.pdf) represents the word vectors considering the co-occurrence in the window, and [fastText](https://arxiv.org/abs/1607.04606) utilizes the subword n-gram so that the embedding can be efficient for morphologically rich languages. In the following approaches that use dense word vectors, we will adopt [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor), for the project 3i4k.
 
@@ -212,6 +227,8 @@ In the first few chapters, we've demonstrated how the corpus we've adopted is pr
 * “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
 
+---
+
 This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
 
 * 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
@@ -226,6 +243,8 @@ This kind of sentence encoding gives us quite a rich representation of the sente
 * AI를 공부하시는 분이라면 convolutional neural network, 즉 CNN을 한번쯤 들어보셨을 겁니다. 초기에 르쿤 등등에 의해 연구되고, 6-7년 전쯤부터 폭발적으로 성장하여 지금은 이미지 관련 태스크라면 베이스라인 혹은 그 베리에이션으로 인용된다는 것두요. 그러한 이력 덕분인지, NLP에 CNN을 사용한다고 하면 의아해하는 경우가 있더군요. 저도 사실 익숙해져서 그렇지, 다시 첨부터 써보라고 하면 이게 무슨 소리야 싶을지도 모르겠네요ㅎㅎ
 * 제가 이미지에 CNN을 사용해본 적은 거의 없지만, 쉽게 말해 raw data를 부분부분 보고 그 정보를 추상화하는 과정을 여러번 거친다, 라고 생각하고 있습니다. 아주 러프하게요. 그것이 이미지에 처음 적용된 것이죠. 하지만 사실 정보의 추상화란 이미지에만 적용될 이유는 없습니다. 그래서 저는 cnn을 distributional information의 summarizer로 표현합니다. 어디에 무엇이 있는지 아주 간단하게 요약해 주는.
 
+---
+
 However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
 <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
@@ -234,11 +253,15 @@ However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs
 * 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
 * 이 때 다시 등장하는 것이 앞서 언급한 word2vec입니다. 문장을 수치화해 넣을 수 있는 일종의 고정된 사이즈의 도화지가 있다고 생각해 봅시다. 예컨대 100 x 30정도의? 거기에 100-dim word vector 30개를 padding해 넣는 겁니다. 물론 문장 길이가 30이 되지 않을 수도 있지요. 그러면 빈 부분은 0으로 채웁니다. 진짜 없으니까요. 문장이 더 길다면? 자릅니다. 물론 이 부분은 '문장 최대길이'를 조사해서 적절히 설정하면 될 일입니다 (물론 이렇게 하지 않고 모두 보존하는 방법도 있겠습니다만, 일단 여기선 다루지 않겠습니다). 이 과정에서 한국어의 head-finality를 고려하여 문장은 오른쪽에 치우치게 배열하도록 결정하였습니다. 한국어는 역시 끝까지 들어봐야 하니까, 자르더라도 끝은 남겨야죠!
 
+---
+
 There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
 
 * 일단 image를 cnn에 적용하는 과정을 패러미터화하면, 채널, 필터, 컨벌루션레이어, 윈도우, 풀링 정도로 요약할 수 있습니다. 채널은 앞서 말했듯 rgb 같이 몇 개의 요소로 나타내냐이며 필터는 얼마나 병렬로 처리할거냐, 컨벌루션레이어 수는 추상화 과정을 몇번 거칠거냐, 윈도우는 어떤 식으로 각 컨벌루션 레이어를 훑을거냐, 풀링은 컨벌루션 레이어를 훑은 값들에서 중요한 요소들을 어떻게 취사선택할거냐? 이정도로 나타낼 수 있겠네요.
 * 이미지의 cnn은 그래서 일반적으로 3채널, 많은 필터 (>64?), 다층 컨벌루션 레이어, 상하좌우로 stride되는 3 by 3 혹은 5 by 5 window 등으로 요약될 수 있습니다. 물론 alexnet, vgg, yolo 등 다양한 아키텍쳐들이 있고, 모두 특색이 있겠지만, 기본적으론 저렇습니다. 하지만 word vector sequence에서 상하좌우로 움직이는 window가 어떤 의미가 있을까요? 우리는 100dim의 벡터 각 엔트리에 어떤 성질의 성분들이 자리잡고 있는지 알지 못하며, 굳이 그런 성질을 지정해줄 필요도 느끼지 못하였습니다. 이미지는 두차원 모두가 semantic을 포함하지만, sentence에서 semantic이 의미가 있는 방향은 word vector가 pad되는 방향이니까요.
 * 그래서 저는 sentence의 cnn에선 3 by 100 혹은 5 by 100 window를 사용합니다. 결론적으론 2D convolution이 1D처럼 돼버리긴 합니다만, 역설적으로 문장을 그림이 아니라 문장처럼 볼 수 있는 방법이 되는 것 같아요. Word2vec의 결과물로 나온 그 단어의 vector의 특색을 결정짓는 entry를 가장 왜곡 없이 전달해줄 수 있는 방법이라고 저는 보고 있습니다. 그 이후의 max-pooling과 추가적인 convolution 아키텍쳐는 개인의 선택에 달렸지만요. Boolean distributional semantics처럼 word vector의 각 entry가 어떤 의미를 갖는다면 모르겠지만, 그렇지 않다면 문장은 문장처럼 읽는 것이 cnn에 있어서도 효과적이지 않나? 라는 것이 저의 생각입니다. (물론 반례 및 피드백은 언제나 환영입니다!)
+
+---
 
 The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
 
