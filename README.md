@@ -197,6 +197,33 @@ metrics.f1_score(bi_pred,fci_label_test,average="weighted")
 precision_recall_fscore_support(bi_pred,fci_label_test)
 ```
 
+```python
+# CONSOLE RESULT
+>>> accuracy_score(uni_pred,fci_label_test)
+0.7785129723141215
+>>> precision_recall_fscore_support(uni_pred,fci_label_test)
+(array([0.67030568, 0.89564732, 0.87613122, 0.75669291, 0.13414634,
+       0.21153846, 0.02673797]), array([0.69300226, 0.70798412, 0.86584684, 0.82277397, 0.61111111,
+       0.70967742, 0.55555556]), array([0.68146504, 0.79083518, 0.87095867, 0.78835111, 0.22      ,
+       0.32592593, 0.05102041]), array([ 443, 2267, 1789, 1168,   36,   31,    9]))
+>>> metrics.f1_score(uni_pred,fci_label_test,average="macro")
+0.5326509049311736
+>>> metrics.f1_score(uni_pred,fci_label_test,average="weighted")
+0.7996055049065471
+
+>>> accuracy_score(bi_pred,fci_label_test)
+0.3668814208601776
+>>> precision_recall_fscore_support(bi_pred,fci_label_test)
+(array([0.75327511, 0.48158482, 0.36029412, 0.20551181, 0.        ,
+       0.        , 0.00534759]), array([0.2457265 , 0.37850877, 0.53983051, 0.30278422, 0.        ,
+       0.        , 1.        ]), array([0.37056928, 0.42387033, 0.43215739, 0.24484053, 0.        ,
+       0.        , 0.0106383 ]), array([1404, 2280, 1180,  862,    5,   11,    1]))
+>>> metrics.f1_score(bi_pred,fci_label_test,average="macro")
+0.21172511891093732
+>>> metrics.f1_score(bi_pred,fci_label_test,average="weighted")
+0.38441799201505655
+```
+
 * 지금까지  tf-idf를 이용한 sentence 의 sparse representation에 대해 얘기했지요. 이제 구체적으로 이 녀석들을 문장 분류에 이용해먹을 만한 방법들에 대해 생각해봐야 하는데요, 그 중 하나가 이 글의 task로 제시된 분류 (classification)입니다. 
 
 * 사실 데이터 집합(문장들)과 레이블 집합(긍정문/부정문, 의문문별 분류, 토픽별 분류 등)으로 된 트레이닝 데이터를 input으로 넣어, 별도의 테스트 데이터로 얻어진 prediction와 정답의 비교를 통해 그 네트워크의 accuracy, F-measure 등을 evaluate하여 성능을 평가한다는 점은 많은 분야에서 사용되는 분류기 evaluation의 구조입니다. 
@@ -362,6 +389,9 @@ metricsf1macro = Metricsf1macro()
 
 from sklearn.utils import class_weight
 class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_label), fci_label)
+```
+
+```python
 def validate_cnn(result,y,filters,hidden_dim,cw,filename):
     model = Sequential()
     model.add(layers.Conv2D(filters,(3,len(result[0][0])),activation= 'relu',input_shape = (len(result[0]),len(result[0][0]),1)))
@@ -378,6 +408,55 @@ def validate_cnn(result,y,filters,hidden_dim,cw,filename):
     model.fit(result,y,validation_split=0.1,epochs=30,batch_size=16,callbacks=callbacks_list,class_weight=cw)
 
 validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
+```
+
+```python
+# CONSOLE RESULT
+>>> validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+conv2d_1 (Conv2D)            (None, 28, 1, 32)         9632      
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 14, 1, 32)         0         
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 12, 1, 32)         3104      
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 384)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               49280     
+_________________________________________________________________
+dense_2 (Dense)              (None, 7)                 903       
+=================================================================
+Total params: 62,919
+Trainable params: 62,919
+Non-trainable params: 0
+_________________________________________________________________
+Train on 51684 samples, validate on 5743 samples
+Epoch 1/30
+51600/51684 [============================>.] - ETA: 0s - loss: 0.6353 - acc: 0.7863— val_f1: 0.577525 — val_precision: 0.721343 — val_recall: 0.562436
+— val_f1_w: 0.811520 — val_precision_w: 0.814879 — val_recall_w: 0.832666
+51684/51684 [==============================] - 19s 377us/step - loss: 0.6350 - acc: 0.7864 - val_loss: 0.4987 - val_acc: 0.8327
+Epoch 2/30
+51616/51684 [============================>.] - ETA: 0s - loss: 0.4569 - acc: 0.8482— val_f1: 0.661298 — val_precision: 0.704766 — val_recall: 0.644935
+— val_f1_w: 0.829482 — val_precision_w: 0.832600 — val_recall_w: 0.836148
+51684/51684 [==============================] - 19s 375us/step - loss: 0.4569 - acc: 0.8482 - val_loss: 0.4827 - val_acc: 0.8361
+Epoch 3/30
+51568/51684 [============================>.] - ETA: 0s - loss: 0.4069 - acc: 0.8628— val_f1: 0.685981 — val_precision: 0.711728 — val_recall: 0.674920
+— val_f1_w: 0.837491 — val_precision_w: 0.840673 — val_recall_w: 0.840327
+51684/51684 [==============================] - 19s 373us/step - loss: 0.4067 - acc: 0.8628 - val_loss: 0.4642 - val_acc: 0.8403
+Epoch 4/30
+51568/51684 [============================>.] - ETA: 0s - loss: 0.3732 - acc: 0.8734— val_f1: 0.694238 — val_precision: 0.743687 — val_recall: 0.666121
+— val_f1_w: 0.849517 — val_precision_w: 0.848548 — val_recall_w: 0.854954
+51684/51684 [==============================] - 19s 377us/step - loss: 0.3732 - acc: 0.8734 - val_loss: 0.4362 - val_acc: 0.8550
+Epoch 5/30
+51616/51684 [============================>.] - ETA: 0s - loss: 0.3467 - acc: 0.8810— val_f1: 0.700670 — val_precision: 0.759441 — val_recall: 0.668912
+— val_f1_w: 0.850824 — val_precision_w: 0.851885 — val_recall_w: 0.858262
+51684/51684 [==============================] - 19s 375us/step - loss: 0.3469 - acc: 0.8809 - val_loss: 0.4275 - val_acc: 0.8583
+Epoch 6/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.3264 - acc: 0.8880— val_f1: 0.698527 — val_precision: 0.748593 — val_recall: 0.678563
+— val_f1_w: 0.853043 — val_precision_w: 0.852584 — val_recall_w: 0.860700
+51684/51684 [==============================] - 19s 371us/step - loss: 0.3264 - acc: 0.8880 - val_loss: 0.4331 - val_acc: 0.8607
 ```
 
 * 일단 image를 cnn에 적용하는 과정을 패러미터화하면, 채널, 필터, 컨벌루션레이어, 윈도우, 풀링 정도로 요약할 수 있습니다. 채널은 앞서 말했듯 rgb 같이 몇 개의 요소로 나타내냐이며 필터는 얼마나 병렬로 처리할거냐, 컨벌루션레이어 수는 추상화 과정을 몇번 거칠거냐, 윈도우는 어떤 식으로 각 컨벌루션 레이어를 훑을거냐, 풀링은 컨벌루션 레이어를 훑은 값들에서 중요한 요소들을 어떻게 취사선택할거냐? 이정도로 나타낼 수 있겠네요.
@@ -416,7 +495,9 @@ fci_rnn = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 from keras.layers import LSTM
 from keras.layers import Bidirectional
+```
 
+```python
 def validate_bilstm(result,y,hidden_lstm,hidden_dim,cw,filename):
     model = Sequential()
     model.add(Bidirectional(LSTM(hidden_lstm), input_shape=(len(result[0]), len(result[0][0]))))
@@ -432,6 +513,77 @@ def validate_bilstm(result,y,hidden_lstm,hidden_dim,cw,filename):
 validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 ```
 
+```python
+# CONSOLE RESULT
+>>> validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+bidirectional_2 (Bidirection (None, 64)                34048     
+_________________________________________________________________
+dense_4 (Dense)              (None, 128)               8320      
+_________________________________________________________________
+dense_5 (Dense)              (None, 7)                 903       
+=================================================================
+Total params: 43,271
+Trainable params: 43,271
+Non-trainable params: 0
+_________________________________________________________________
+
+Train on 51684 samples, validate on 5743 samples
+Epoch 1/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.5610 - acc: 0.8128— val_f1: 0.671337 — val_precision: 0.721156 — val_recall: 0.648963
+— val_f1_w: 0.836127 — val_precision_w: 0.835080 — val_recall_w: 0.843287
+51684/51684 [==============================] - 81s 2ms/step - loss: 0.5610 - acc: 0.8128 - val_loss: 0.4706 - val_acc: 0.8433
+Epoch 2/30
+51664/51684 [============================>.] - ETA: 0s - loss: 0.4385 - acc: 0.8521— val_f1: 0.692261 — val_precision: 0.739367 — val_recall: 0.666227
+— val_f1_w: 0.846166 — val_precision_w: 0.844998 — val_recall_w: 0.851820
+51684/51684 [==============================] - 79s 2ms/step - loss: 0.4385 - acc: 0.8521 - val_loss: 0.4329 - val_acc: 0.8518
+Epoch 3/30
+51664/51684 [============================>.] - ETA: 0s - loss: 0.3994 - acc: 0.8634— val_f1: 0.697970 — val_precision: 0.777117 — val_recall: 0.659569
+— val_f1_w: 0.852976 — val_precision_w: 0.854659 — val_recall_w: 0.861048
+51684/51684 [==============================] - 80s 2ms/step - loss: 0.3994 - acc: 0.8635 - val_loss: 0.4148 - val_acc: 0.8610
+Epoch 4/30
+51648/51684 [============================>.] - ETA: 0s - loss: 0.3715 - acc: 0.8731— val_f1: 0.726711 — val_precision: 0.769367 — val_recall: 0.700206
+— val_f1_w: 0.861842 — val_precision_w: 0.861756 — val_recall_w: 0.865575
+51684/51684 [==============================] - 79s 2ms/step - loss: 0.3717 - acc: 0.8729 - val_loss: 0.4016 - val_acc: 0.8656
+Epoch 5/30
+51648/51684 [============================>.] - ETA: 0s - loss: 0.3510 - acc: 0.8804— val_f1: 0.732919 — val_precision: 0.756133 — val_recall: 0.714735
+— val_f1_w: 0.865283 — val_precision_w: 0.864796 — val_recall_w: 0.868187
+51684/51684 [==============================] - 79s 2ms/step - loss: 0.3511 - acc: 0.8804 - val_loss: 0.3880 - val_acc: 0.8682
+Epoch 6/30
+51664/51684 [============================>.] - ETA: 0s - loss: 0.3333 - acc: 0.8867— val_f1: 0.744263 — val_precision: 0.742123 — val_recall: 0.752202
+— val_f1_w: 0.866932 — val_precision_w: 0.871576 — val_recall_w: 0.863660
+51684/51684 [==============================] - 79s 2ms/step - loss: 0.3333 - acc: 0.8867 - val_loss: 0.3944 - val_acc: 0.8637
+Epoch 7/30
+51664/51684 [============================>.] - ETA: 0s - loss: 0.3170 - acc: 0.8913— val_f1: 0.729010 — val_precision: 0.774354 — val_recall: 0.700533
+— val_f1_w: 0.865218 — val_precision_w: 0.863544 — val_recall_w: 0.870625
+51684/51684 [==============================] - 80s 2ms/step - loss: 0.3169 - acc: 0.8914 - val_loss: 0.3909 - val_acc: 0.8706
+Epoch 8/30
+51648/51684 [============================>.] - ETA: 0s - loss: 0.3040 - acc: 0.8954— val_f1: 0.739023 — val_precision: 0.768832 — val_recall: 0.719142
+— val_f1_w: 0.867667 — val_precision_w: 0.870100 — val_recall_w: 0.869058
+51684/51684 [==============================] - 78s 2ms/step - loss: 0.3039 - acc: 0.8955 - val_loss: 0.3950 - val_acc: 0.8691
+Epoch 9/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.2903 - acc: 0.9009— val_f1: 0.751430 — val_precision: 0.769792 — val_recall: 0.739712
+— val_f1_w: 0.874110 — val_precision_w: 0.875341 — val_recall_w: 0.874108
+51684/51684 [==============================] - 83s 2ms/step - loss: 0.2903 - acc: 0.9010 - val_loss: 0.3772 - val_acc: 0.8741
+Epoch 10/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.2779 - acc: 0.9039— val_f1: 0.752393 — val_precision: 0.772166 — val_recall: 0.742639
+— val_f1_w: 0.871297 — val_precision_w: 0.871833 — val_recall_w: 0.874282
+51684/51684 [==============================] - 83s 2ms/step - loss: 0.2779 - acc: 0.9039 - val_loss: 0.3825 - val_acc: 0.8743
+Epoch 11/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.2663 - acc: 0.9100— val_f1: 0.736928 — val_precision: 0.770432 — val_recall: 0.721984
+— val_f1_w: 0.862387 — val_precision_w: 0.866533 — val_recall_w: 0.862789
+51684/51684 [==============================] - 83s 2ms/step - loss: 0.2663 - acc: 0.9100 - val_loss: 0.4140 - val_acc: 0.8628
+Epoch 12/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.2552 - acc: 0.9120— val_f1: 0.748533 — val_precision: 0.784169 — val_recall: 0.726216
+— val_f1_w: 0.874515 — val_precision_w: 0.875506 — val_recall_w: 0.876023
+51684/51684 [==============================] - 82s 2ms/step - loss: 0.2552 - acc: 0.9120 - val_loss: 0.3885 - val_acc: 0.8760
+Epoch 13/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.2445 - acc: 0.9152— val_f1: 0.753067 — val_precision: 0.777666 — val_recall: 0.742513
+— val_f1_w: 0.875957 — val_precision_w: 0.877898 — val_recall_w: 0.878983
+51684/51684 [==============================] - 82s 2ms/step - loss: 0.2445 - acc: 0.9152 - val_loss: 0.3942 - val_acc: 0.8790
+```
 ## 8. Character embedding
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
