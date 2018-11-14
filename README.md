@@ -57,7 +57,8 @@ fci_label= [int(t[0]) for t in fci]</code></pre>
 
 The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
 
-<pre><code>from konlpy.tag import Twitter
+<pre><code>import nltk
+from konlpy.tag import Twitter
 pos_tagger = Twitter()
 
 def twit_token(doc):
@@ -69,7 +70,10 @@ fci_data_train = fci_data[:len_train]
 fci_data_test  = fci_data[len_train:]
 
 fci_token_train = [twit_token(row) for row in fci_data_train]
-fci_token_test  = [twit_token(row) for row in fci_data_test]</code></pre>
+fci_token_test  = [twit_token(row) for row in fci_data_test]
+
+fci_sp_token_train = [nltk.word_tokenize(row) for row in fci_token_train]
+fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]</code></pre>
 
 * 데이터를 읽어들였으니, 이제 형태소 분리를 통해 어절이라는 큰 뭉텅이들을 좀 더 세밀한 단위로 나눠 보도록 하겠습니다. 음절 기반 방법, 혹은 자소 분해 방법들도 요즘 많이 사용되지만, 형태소 기반의 문장 표현이 아무래도 교착어인 한국어에서 가장 기본적인 접근 방법이 아닌가 싶습니다. 
 * 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다.
@@ -98,6 +102,32 @@ Previously, we've introduced one-hot encoding of the words and the sparse senten
 (image from https://skymind.ai/wiki/bagofwords-tf-idf)
 
 But the problem is that the high frequency does not indicate that importance of the word. Thus, the concept of **inverse-document frequence** (IDF) is introduced, as a way of multiplying the inverse fraction of the frequency of the word among the whole documents. This prevents the overestimation of the functional words in many cases; to be honest, 'I' and 'you' are not as important as 'love', 'want' and 'need'. For instance, in the morpheme-based analysis, many particles in Korean are used repetitively in the sentences; those will be assigned a low IDF so that the lexical words are emphasized alternatively. The following code utilizing the scikit-learn library demonstrates how the **term frequency-inverse document frequency** (TF-IDF) is computed for our corpus.
+
+<pre><code># Referred to the followings for the code:
+# https://gist.github.com/jason-riddle/1a854af26562c0cdb1e6ff550d1bf32d#file-complex-tf-idf-example-py-L40
+# http://blog.christianperone.com/2011/10/machine-learning-text-feature-extraction-tf-idf-part-ii/
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def tfidf_featurizer(corpus_train,corpus_test):
+    count_vectorizer = CountVectorizer()
+    count_vectorizer.fit_transform(corpus_train)
+    freq_term_matrix = count_vectorizer.transform(corpus_train)
+    tfidf = TfidfTransformer(norm="l2")
+    tfidf.fit(freq_term_matrix)
+    #############
+    tfidf_token = TfidfVectorizer(ngram_range=(1,1),max_features=3000)
+    token_tfidf_total = tfidf_token.fit_transform(corpus_train+corpus_test)
+    token_tfidf_total_mat = token_tfidf_total.toarray()
+    #############
+    tfidf_bi_token = TfidfVectorizer(ngram_range=(1,2),max_features=3000)
+    token_tfidf_bi_total = tfidf_bi_token.fit_transform(corpus_train+corpus_test)
+    token_tfidf_bi_total_mat = token_tfidf_bi_total.toarray()
+    return token_tfidf_total_mat,token_tfidf_bi_total_mat
+
+fci_tfidf,fci_tfidf_bi  = tfidf_featurizer(fci_token_train,fci_token_test)</code></pre>
 
 * 그런데 또 문제가 있습니다. 바로 하나님이 소유를 나타내는 '의'와 동급이 돼버리는 겁니다. 아아, 이렇게 원통할 데가... 딱 봐도 '의'라는 녀석은 문장의 의미를 판단하는 데에 큰 도움을 주지 않을 것으로 보입니다. 다른 문장들에도 많이 나올 게 분명하거든요. 
 * 그래서 우리가 생각해볼 수 있는 건 '다른 문장들에도 많이 나오는 녀석엔 가중치를 조금 주면 어떨까?'하는 것입니다. 예컨대 전체 문장 중 해당 문장이 나오는 비율의 역수 같은 걸 곱해준다면? 이런 생각으로 나온 녀석이 바로 inverse document frequency입니다. 약간의 smoothing factor을 추가하자면, test corpus에 해당 term이 없는 경우를 대비해 분모에 1을 더해주고, corpus size가 방대해질 때를 고려해 log를 입히는 정도?
