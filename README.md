@@ -121,11 +121,11 @@ def tfidf_featurizer(corpus_train,corpus_test):
     freq_term_matrix = count_vectorizer.transform(corpus_train)
     tfidf = TfidfTransformer(norm="l2")
     tfidf.fit(freq_term_matrix)
-    #############
+    # unigram features
     tfidf_token = TfidfVectorizer(ngram_range=(1,1),max_features=3000)
     token_tfidf_total = tfidf_token.fit_transform(corpus_train+corpus_test)
     token_tfidf_total_mat = token_tfidf_total.toarray()
-    #############
+    # bigram features
     tfidf_bi_token = TfidfVectorizer(ngram_range=(1,2),max_features=3000)
     token_tfidf_bi_total = tfidf_bi_token.fit_transform(corpus_train+corpus_test)
     token_tfidf_bi_total_mat = token_tfidf_bi_total.toarray()
@@ -146,6 +146,7 @@ The aforementioned sentence representation can be directly utilized with the bas
 <pre><code>from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+
 classifier_uni = LogisticRegression(random_state=1234)
 classifier_uni.fit(fci_tfidf_train,fci_label_train)
 uni_pred = classifier_uni.predict(fci_tfidf_test)
@@ -193,7 +194,10 @@ The term word2Vec is very intuitive, and it converts the words, which are discre
 * 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠.  또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
 * 이러한 관점에서 볼 때, word2vec은 상당히 매력적인 시도였다 볼 수 있겠습니다. 혹자는 '비슷한 context에 등장하는 녀석들은 실제로도 비슷한/관련 있는 녀석들일 가능성이 높다는 distributional semantics의 원칙을 수치적 제약으로 잘 지키면서 one-hot vector을 저차원에 pca한 결과물'이라고 하더군요. 예컨대 '너는 나쁜 아이야'와 '너는 착한 아이야'라는 문장들을 볼 때, '나쁜'과 '착한'이 실제로 저런 류의 context를 많이 공유한다 생각해 보면, 둘이 아주 관계가 없는 단어들은 아니다, 어느정도 유기적이다, 그런 판단을 할 수 있겠죠? word2vec의 큰 철학은 이렇습니다. 컨텍스트를 주고 center word를 추론하는 CBOW와 그 반대인 skip-gram (SG) 모두 word2vec의 최적화와 관련된 알고리듬인데요, SG가 여러 태스크에서 더 성능이 좋음이 보여진 바 있고 실제로도 더 자주 활용됩니다. 
 
-Up to date, many advanced models of word vectors which base on word2vec have been proposed. For instance, [GloVe](https://nlp.stanford.edu/pubs/glove.pdf) represents the word vectors considering the co-occurence in the window, and [fastText](https://arxiv.org/abs/1607.04606) utilizes the subword n-gram so that the embedding can be efficient for morphologically rich languages. In the following approaches that use dense word vectors, we will adopt [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor), for the project 3i4k.
+Up to date, many advanced models of word vectors which base on word2vec have been proposed. For instance, [GloVe](https://nlp.stanford.edu/pubs/glove.pdf) represents the word vectors considering the co-occurrence in the window, and [fastText](https://arxiv.org/abs/1607.04606) utilizes the subword n-gram so that the embedding can be efficient for morphologically rich languages. In the following approaches that use dense word vectors, we will adopt [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor), for the project 3i4k.
+
+<pre><code>import fasttext
+model_ft = fasttext.load_model('vectors/model_drama.bin')</code></pre>
 
 * Word2vec은 이런 저차원 임베딩의 포문을 열었을 뿐이고 (for문 아닙니다) 이후로 수많은 베리에이션이 등장했습니다. 이 때 사용하는 알고리듬이 skip-gram이란 점이 크게 변하지는 않았지만, 다양한 objective를 설정하며 특정 task에 효율적으로 적용할 수 있는 vector들이 등장했죠.
 * 가장 많이 알려진 두 베리에이션은 GloVe와 fastText입니다. 전자는 word2vec 이전에 사용되던 sparse representation 중 하나인 co-occurrence matrix의 개념을 training objective에 활용하여 보다 global하고 syntactic한 특징도 word vector에 반영할 수 있게 한 것이고, 후자는 word2vec과 사실상 같은 알고리즘이지만 그 트레이닝 효율을 거의 몇백배 수준으로 끌어올려 빠르게 트레이닝하면서도 task 성능은 엇비슷하게 유지할 수 있게 하는 알고리듬입니다. 또한 fastText는 subword n-gram model을 차용하여, word 단위로 나뉘어지지 않은, 단어 내의 character n-gram들도 일종의 word로 보고 그 분포를 전체 트레이닝에 고려한다는 특징을 가지고 있지요. 이를 통해 morphologically rich한 언어들에서도 효율적으로 활용 가능하다는 점을 논문에서 어필하고 있구요.
@@ -208,7 +212,7 @@ In the first few chapters, we've demonstrated how the corpus we've adopted is pr
 * “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
 
-This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself  yields a variety of values. This might be advantageous to the tasks such as sentiment analysis, which is largely determined by some polarity items or the emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
+This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
 
 * 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
 
