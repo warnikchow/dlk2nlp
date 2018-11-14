@@ -5,7 +5,7 @@
 
 ## Requirements
 ### The versions can be replaced depending on the environment
-Keras==2.1.2, konlpy==0.4.4 (refer the documentation), nltk==3.3, numpy==1.14.3, scikit-learn==0.19.1, tensorflow-gpu==1.4.1
+Keras, konlpy (refer the documentation), nltk, numpy, scikit-learn, tensorflow-gpu
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
