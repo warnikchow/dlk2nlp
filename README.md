@@ -247,6 +247,19 @@ This kind of sentence encoding gives us quite a rich representation of the sente
 
 However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
+<pre><code>def featurize_cnn(corpus,wdim,maxlen):
+    conv_total = np.zeros((len(corpus),maxlen,wdim,1))
+    for i in range(len(corpus)):
+        if i%1000 ==0:
+            print(i)
+        s = corpus[i]
+        for j in range(len(s)):
+            if s[-j-1] in model_ft and j<maxlen:
+                conv_total[i][-j-1,:,0]=model_ft[s[-j-1]]
+    return conv_total
+    
+fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)</code></pre>
+
 * 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
 * 이 때 다시 등장하는 것이 앞서 언급한 word2vec입니다. 문장을 수치화해 넣을 수 있는 일종의 고정된 사이즈의 도화지가 있다고 생각해 봅시다. 예컨대 100 x 30정도의? 거기에 100-dim word vector 30개를 padding해 넣는 겁니다. 물론 문장 길이가 30이 되지 않을 수도 있지요. 그러면 빈 부분은 0으로 채웁니다. 진짜 없으니까요. 문장이 더 길다면? 자릅니다. 물론 이 부분은 '문장 최대길이'를 조사해서 적절히 설정하면 될 일입니다 (물론 이렇게 하지 않고 모두 보존하는 방법도 있겠습니다만, 일단 여기선 다루지 않겠습니다). 이 과정에서 한국어의 head-finality를 고려하여 문장은 오른쪽에 치우치게 배열하도록 결정하였습니다. 한국어는 역시 끝까지 들어봐야 하니까, 자르더라도 끝은 남겨야죠!
 
@@ -331,8 +344,6 @@ The CNN-based featurization and classification of the sentence shows quite satis
 
 * rnn, 즉 recurrent neural network란 time-series의 input을 받아, 그에 대한 latent information을 담고 있는 hidden layer sequence를 생성하되, 특정 시점에서의 hidden layer가 그 시점에서의 input data와 이전 시점의 hidden layer로부터 연산되는 알고리듬입니다. hidden Markov model (HMM)과 그 컨셉은 유사하지만 바로 이전 시점에만 영향받지 않고, 앞서 있는 데이터 모두의 정보를 뒷부분의 hidden layer에 반영한다는 장점이 있죠. 쉽게 말해 sequential data의 summarization이라고 보면 될 것 같네요.
 
-* rnn을 트레이닝하는 과정 역시 일반적인 mlp나 cnn에서와 마찬가지로 back-propagation을 이용하게 되는데요, 이 과정에서 vanishing gradient의 문제가 발생하게 됩니다. 너무 많은 정보들이 encoding되다 보니 패러미터가 폭발해 버리는 겁니다. 사람은 이와 다르게, 문장이나 글이 길어지게 되면 너무 멀리 떨어져 있는 정보는 잊어버리죠 :D 뭐 그게 꼭 좋은 건 아니겠지만서두, 정보 과잉을 방지해주거나 뭐 그렇지 않겠습니까? 그런 컨셉으로 나온 것이 적당히 forget gate를 추가한, 1997년의 long short-term memory (LSTM)입니다. lstm이 앞부분의 정보를 반영하지 못한다는 단점을 보완하기 위해 제시된 것이, lstm을 양방향으로 (처음에서 시작해서 끝으로, 끝에서 시작해서 처음으로) 하여 얻은 hidden layer sequences를 augment한 Bidirectional lstm도 같은 해에 제시되었구요. 생각보다 옛날인데 왜 이제 와서 유행하게 됐냐구요? 계산량이 엄청나기 때문이죠... 갓비디아 짱짱컴퍼니
-
 <pre><code>def featurize_rnn(corpus,wdim,maxlen):
     rnn_total = np.zeros((len(corpus),maxlen,wdim))
     for i in range(len(corpus)):
@@ -345,6 +356,8 @@ The CNN-based featurization and classification of the sentence shows quite satis
     return rnn_total
 
 fci_rnn = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)</code></pre>
+
+* rnn을 트레이닝하는 과정 역시 일반적인 mlp나 cnn에서와 마찬가지로 back-propagation을 이용하게 되는데요, 이 과정에서 vanishing gradient의 문제가 발생하게 됩니다. 너무 많은 정보들이 encoding되다 보니 패러미터가 폭발해 버리는 겁니다. 사람은 이와 다르게, 문장이나 글이 길어지게 되면 너무 멀리 떨어져 있는 정보는 잊어버리죠 :D 뭐 그게 꼭 좋은 건 아니겠지만서두, 정보 과잉을 방지해주거나 뭐 그렇지 않겠습니까? 그런 컨셉으로 나온 것이 적당히 forget gate를 추가한, 1997년의 long short-term memory (LSTM)입니다. lstm이 앞부분의 정보를 반영하지 못한다는 단점을 보완하기 위해 제시된 것이, lstm을 양방향으로 (처음에서 시작해서 끝으로, 끝에서 시작해서 처음으로) 하여 얻은 hidden layer sequences를 augment한 Bidirectional lstm도 같은 해에 제시되었구요. 생각보다 옛날인데 왜 이제 와서 유행하게 됐냐구요? 계산량이 엄청나기 때문이죠... 갓비디아 짱짱컴퍼니
 
 <pre><code>from keras.layers import LSTM
 from keras.layers import Bidirectional
