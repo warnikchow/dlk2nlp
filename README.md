@@ -247,6 +247,14 @@ This kind of sentence encoding gives us quite a rich representation of the sente
 
 However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
+<pre><code>def featurize_cnn(corpus,wdim,maxlen):
+    conv_total = np.zeros((len(corpus),maxlen,wdim,1))
+    for i in range(len(corpus)):
+        if i%1000 ==0:
+            print(i)
+        s = corpus[i]
+        for j in range(len(s)):
+            if s[-j-1] in model_ft and j<maxlen:</code></pre>
 
 <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
 (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
