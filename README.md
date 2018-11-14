@@ -254,8 +254,8 @@ However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs
             print(i)
         s = corpus[i]
         for j in range(len(s)):
-            if s[-j-1] in model_ft and j<maxlen:
-                conv_total[i][-j-1,:,0]=model_ft[s[-j-1]]
+            if s[-j-1] in model_ft and j < maxlen:
+                conv_total[i][-j-1,:,0] = model_ft[s[-j-1]]
     return conv_total
     
 fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)</code></pre>
@@ -351,8 +351,8 @@ The CNN-based featurization and classification of the sentence shows quite satis
             print(i)
         s = corpus[i]
         for j in range(len(s)):
-            if s[-j-1] in model_ft and j<maxlen:
-                rnn_total[i][-j-1,:]=model_ft[s[-j-1]]
+            if s[-j-1] in model_ft and j < maxlen:
+                rnn_total[i][-j-1,:] = model_ft[s[-j-1]]
     return rnn_total
 
 fci_rnn = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)</code></pre>
