@@ -33,7 +33,8 @@
 **5: Rhetorical command**</br>
 **6: Intonation-dependent utterance**</br></br>
 where the IAA was computed 0.85 (quite high!) for the manually annotated 2K utterance set (corpus 1 in the table below).</br>
-<image src="https://github.com/warnikchow/3i4k/blob/master/images/portion.PNG" width="400">
+<p align="center">
+    <image src="https://github.com/warnikchow/3i4k/blob/master/images/portion.PNG" width="400">
     
 * 태스크는 의도 분류로써, [3i4k](https://github.com/warnikchow/3i4k) 프로젝트를 위해 제작된 DB를 사용합니다. 사실 국책과제에 쓰려고 만든건데 어차피 논문으로도 submit했으니 공개는 상관 없지 않을까 싶어요. 5만 7천 문장쯤으로 아주 규모가 크지는 않지만, 일단 수작업으로 2만 문장 정도에서 0.85의 IAA를 얻었으며 (꽤 높은 agreement!), 4만 문장 가량이 더 수집/생성되어 그래도 어느정도 쓸만한 데이터셋이 만들어졌습니다. 
 
@@ -119,8 +120,9 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 ## 3. TF-IDF and basic classifiers
 > Previously, we've introduced one-hot encoding of the words and the sparse sentence representation based on the BoW model. However, despite its transparency and conciseness, one-hot encoding does not convey the word frequency regarding the document. This is where the concept of **term frequency** (TF) came out; the word frequency is taken into account to convey the relative importance of each word. For instance, the word 'I' and 'you' in the sentence *I love you, I want you, I need you* may be assigned the word frequency of 3 instead of 1 which is assigned to the verbs.
 
-<image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
-(image from https://skymind.ai/wiki/bagofwords-tf-idf)
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
+    (image from https://skymind.ai/wiki/bagofwords-tf-idf)
 
 * 앞서 bag-of-words 모델을 통해 문장을 1-hot vector들의 합(여기서 합은 Boolean의 or에 해당)으로 나타내어 컴퓨터가 알아먹을 만한 어떤 수치로 나타내는 과정을 설명했습니다. 이는 전통적이고 직관적이며 상당히 강력한 방법이기도 합니다.
 
@@ -273,8 +275,9 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')
 
 > [**Convolutional neural network**](https://ieeexplore.ieee.org/abstract/document/726791) (CNN), originally developed by LeCun, is a widely used neural network system which was primarily suggested for image processing (handwriting recognition). It roughly resembles the perception process of a visual system, summarizing a given image into an abstract values via repititive application of convolution and pooling. 
 
-<image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/alexnet2.png" width="700"><br/>
-(image from https://jeremykarnowski.wordpress.com/2015/07/15/alexnet-visualization/)
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/alexnet2.png" width="700"><br/>
+    (image from https://jeremykarnowski.wordpress.com/2015/07/15/alexnet-visualization/)
 
 * AI를 공부하시는 분이라면 convolutional neural network, 즉 CNN을 한번쯤 들어보셨을 겁니다. 초기에 르쿤 등등에 의해 연구되고, 6-7년 전쯤부터 폭발적으로 성장하여 지금은 이미지 관련 태스크라면 베이스라인 혹은 그 베리에이션으로 인용된다는 것두요. 그러한 이력 덕분인지, NLP에 CNN을 사용한다고 하면 의아해하는 경우가 있더군요. 저도 사실 익숙해져서 그렇지, 다시 첨부터 써보라고 하면 이게 무슨 소리야 싶을지도 모르겠네요ㅎㅎ
 
@@ -285,6 +288,8 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')
 > However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
 ```python
+import numpy as np
+
 def featurize_cnn(corpus,wdim,maxlen):
     conv_total = np.zeros((len(corpus),maxlen,wdim,1))
     for i in range(len(corpus)):
@@ -299,8 +304,9 @@ def featurize_cnn(corpus,wdim,maxlen):
 fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
 ```
 
-<image src="hhttps://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
-(image from [Kim 2014](https://arxiv.org/abs/1408.5882))
+<p align="center">
+    <image src="hhttps://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
+    (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
 
 * 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
 
