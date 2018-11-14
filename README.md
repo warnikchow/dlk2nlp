@@ -305,7 +305,7 @@ fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
 ```
 
 <p align="center">
-    <image src="hhttps://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
     (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
 
 * 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
