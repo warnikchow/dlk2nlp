@@ -21,7 +21,7 @@ Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk
 [10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)
 
 ## 0. Corpus labeling
-### The most annoying and confusing process. Annotation guideline should be provided to annotators, and more than two natives should be engaged in to make the labeling reliable and also for computation of inter-annotator agreement (IAA). In this project, multi-class (7) annotation of short Korean utterances is utilized.
+> The most annoying and confusing process. Annotation guideline should be provided to annotators, and more than two natives should be engaged in to make the labeling reliable and also for computation of inter-annotator agreement (IAA). In this project, multi-class (7) annotation of short Korean utterances is utilized.
 
 * 데이터를 만드는, 가장 귀찮은 과정입니다. 언어학적 직관은 1인분이기 때문에, 레이블링이 설득력을 얻기 위해서는 적어도 3명 이상의 1화자를 통한 레이블링으로 그 타당성을 검증해야 합니다 (아카데믹하게는...) 
 * 본 프로젝트에서는 7-class의 한국어 문장들이 분류에 사용됩니다.
@@ -36,7 +36,7 @@ Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk
 **4: Rhetorical question**</br>
 **5: Rhetorical command**</br>
 **6: Intonation-dependent utterance**</br></br>
-where the IAA was computed 0.85 (quite high!) for the manually annotated 2K utterance set (corpus 1 in the table below).</br>
+where the [inter-annotator (IAA)](https://en.wikipedia.org/wiki/Cohen%27s_kappa) was computed 0.85 (quite high!) for the manually annotated 2K utterance set (corpus 1 in the table below). The [annotation guideline](https://drive.google.com/open?id=1AvxzEHr7wccMw7LYh0J3Xbx5GLFfcvMW) is in Korean.</br>
 <p align="center">
     <image src="https://github.com/warnikchow/3i4k/blob/master/images/portion.PNG" width="400">
     
@@ -70,7 +70,7 @@ fci_data = [t[1] for t in fci]
 fci_label= [int(t[0]) for t in fci]
 ```
 
-* 한국어엔 역시 Python 3.x 죠.... 2.x로 한국어 인코딩은 지옥입니다 ㅠㅠ 처음에 아주 고생했네요. 어쨌든 제일 첫 삽은 data를 로딩하고 sentence와 label들로 나누는 과정입니다. 저는 [Lucy Park님의 유명한 슬라이드](https://www.lucypark.kr/docs/2015-pyconkr.pdf)에서 처음 봤지만, 외국 NLP 튜토리얼들에도 비슷하게 나와 있습니다. read_data로 파일을 읽어들이고, 탭(\t)으로 split한 후, data와 label array로 나누게 됩니다.
+* 한국어엔 역시 Python 3.x 죠.... 2.x로 한국어 인코딩은 지옥입니다 ㅠㅠ 처음에 아주 고생했네요. 어쨌든 제일 첫 삽은 [data](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt)를 로딩하고 sentence와 label들로 나누는 과정입니다. 저는 [Lucy Park님의 유명한 슬라이드](https://www.lucypark.kr/docs/2015-pyconkr.pdf)에서 처음 봤지만, 외국 NLP 튜토리얼들에도 비슷하게 나와 있습니다. 일단 data라는 폴더를 만들어서 *fci.txt* 파일을 넣어주셔야 하며, read_data로 파일을 읽어들이고 탭(\t)으로 split한 후, data와 label array로 나누게 됩니다.
 
 ---
 
@@ -103,7 +103,7 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 * 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다.
 
 ## 2. One-hot encoding and sentence vector
-> The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the *real meaning*, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is *one-hot encoding* that assigns 1 for only one entry if a specific word is given.
+> The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the **real meaning**, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is **one-hot encoding** that assigns 1 for only one entry if a specific word is given.
 
 * 전산 언어학은 기본적으로 컴퓨터한테 사람이 말하는 것, 즉 자연어를 이해시키는 과정이라고 할 수 있겠습니다. 그래서 우리는 컴퓨터로 하여금, '아 진짜 우리 말을 이해하진 못해도, 대충 어떤 내용인지 판단은 할 수 있게 해 보자' 생각을 하게 됩니다. 그렇게 해서 나오게 된 표현법 (representation) 중 가장 기본적으로 사용되고, 매우 강력한 편이라 아직까지도 많은 곳에서 사용하고 있는 방법론은 바로 단어의 one-hot encoding입니다. 
 
@@ -126,7 +126,7 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
-    (image from https://skymind.ai/wiki/bagofwords-tf-idf)
+    (Image from https://skymind.ai/wiki/bagofwords-tf-idf)
 
 * 앞서 bag-of-words 모델을 통해 문장을 1-hot vector들의 합(여기서 합은 Boolean의 or에 해당)으로 나타내어 컴퓨터가 알아먹을 만한 어떤 수치로 나타내는 과정을 설명했습니다. 이는 전통적이고 직관적이며 상당히 강력한 방법이기도 합니다.
 
@@ -201,6 +201,16 @@ metrics.f1_score(bi_pred,fci_label_test,average="weighted")
 precision_recall_fscore_support(bi_pred,fci_label_test)
 ```
 
+* 지금까지  tf-idf를 이용한 sentence 의 sparse representation에 대해 얘기했지요. 이제 구체적으로 이 녀석들을 문장 분류에 이용해먹을 만한 방법들에 대해 생각해봐야 하는데요, 그 중 하나가 이 글의 task로 제시된 분류 (classification)입니다. 
+
+* 사실 데이터 집합(문장들)과 레이블 집합(긍정문/부정문, 의문문별 분류, 토픽별 분류 등)으로 된 트레이닝 데이터를 input으로 넣어, 별도의 테스트 데이터로 얻어진 prediction와 정답의 비교를 통해 그 네트워크의 accuracy, F-measure 등을 evaluate하여 성능을 평가한다는 점은 많은 분야에서 사용되는 분류기 evaluation의 구조입니다. 
+
+* 이 때 accuracy는 전체 테스트 인풋 중 분류에 성공한 input의 비율이 될 겁니다. 그런데 함정이 있다면, 데이터 편중을 배제하기 어렵단 것이죠. 예컨대 데이터셋의 90퍼센트가 긍정문이고 10퍼센트만 부정문이라면, 공정한 트레이닝 및 테스트가 되었다고 하기 어렵겠죠. 그래서 binary classification에서 많이 사용되는 F-measure의 경우는 precision과 recall이라는, 각각 '1이라고 했을 때 정말 맞을 확률'과 '전체 맞은 것들 중 1이라고 했을 확률'을 생각하여 이들의 조화평균을 구해주는 방향으로 accuracy의 함정을 보정합니다. 물론 단순 조화평균이 아닌 별도 parameter을 주기도 하고, multiclass에 대해선 따로 class별 weight를 정의하기도 하지만요.
+
+---
+
+The result is as below; it is weird that the bigram features yielded quite a lower accuracy. It is assumed that the property of the corpus, where the sentence label does not depend solely on the polarity items or emotion words, may have affected the performance. Also, the dimension of the feature (3,000) which was fixed to guarantee the fair comparison between the two models, could have been a harsh obstacle for the bigram model.
+
 ```properties
 # CONSOLE RESULT
 >>> accuracy_score(uni_pred,fci_label_test)
@@ -228,13 +238,9 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 0.38441799201505655
 ```
 
-* 지금까지  tf-idf를 이용한 sentence 의 sparse representation에 대해 얘기했지요. 이제 구체적으로 이 녀석들을 문장 분류에 이용해먹을 만한 방법들에 대해 생각해봐야 하는데요, 그 중 하나가 이 글의 task로 제시된 분류 (classification)입니다. 
+* 결과는 뜻밖이었는데요, bigram으로 구한 결과가 그다지 신통치 않은 것 같습니다. (코드를 잘못 짰나...?) 어쨌든 궁색하게 분석을 해보자면, 본 task가 sentiment analysis 처럼 단어 한두개로 문장의 의미가 크게 달라지는 task들과 다르게 전체적인 맥락 및 어순을 고려해야 하기도 하고, fair comparison을 위해 3,000으로 제한한 feature dimension이 오히려 bigram에는 해가 되어 정작 중요한 형태소들을 놓친 게 아닌가...하는 생각이 듭니다.
 
-* 사실 데이터 집합(문장들)과 레이블 집합(긍정문/부정문, 의문문별 분류, 토픽별 분류 등)으로 된 트레이닝 데이터를 input으로 넣어, 별도의 테스트 데이터로 얻어진 prediction와 정답의 비교를 통해 그 네트워크의 accuracy, F-measure 등을 evaluate하여 성능을 평가한다는 점은 많은 분야에서 사용되는 분류기 evaluation의 구조입니다. 
-
-* 이 때 accuracy는 전체 테스트 인풋 중 분류에 성공한 input의 비율이 될 겁니다. 그런데 함정이 있다면, 데이터 편중을 배제하기 어렵단 것이죠. 예컨대 데이터셋의 90퍼센트가 긍정문이고 10퍼센트만 부정문이라면, 공정한 트레이닝 및 테스트가 되었다고 하기 어렵겠죠. 그래서 binary classification에서 많이 사용되는 F-measure의 경우는 precision과 recall이라는, 각각 '1이라고 했을 때 정말 맞을 확률'과 '전체 맞은 것들 중 1이라고 했을 확률'을 생각하여 이들의 조화평균을 구해주는 방향으로 accuracy의 함정을 보정합니다. 물론 단순 조화평균이 아닌 별도 parameter을 주기도 하고, multiclass에 대해선 따로 class별 weight를 정의하기도 하지만요.
-
-* 앞서 구한 one-hot encoding이나 TF-IDF로도 이러한 evaluation을 손쉽게 할 수 있습니다. 이 때 evaluation을 위한 prediction은 앞서 말한 10%의 test data로 하게 되지요. 위의 두 모델로도, 상당히 높은 정확도를 가진 모델을 얻을 수 있음을 알 수 있습니다. 그치만 아직도 찝찝한 점은, 컴퓨터가 단어를 세고만 있지 그 단어들이 문장 내에서, 작게는 컨텍스트에서 어떤 역할을 하는지 아무것도 모르는 것 같다는 점입니다. 
+* 앞서 구한 one-hot encoding으로도 이러한 evaluation을 손쉽게 할 수 있습니다. 방금 TF-IDF에서 그랬듯, evaluation을 위한 prediction은 10%의 test data로 하게 되지요. Bigram TF-IDF는 좀 불만족스럽지만, 어쨌든 sparse representation으로도 어느 정도는 높은 정확도를 가진 모델을 얻을 수 있음을 알 수 있습니다. 물론 일부 class들에 대해선 random guess만도 못한 결과를 내고 있지만요. 다만 아직도 찝찝한 점은, 컴퓨터가 단어를 세고만 있지 그 단어들이 문장 내에서, 작게는 컨텍스트에서 어떤 역할을 하는지 아무것도 모르는 것 같다는 점입니다. 
 
 ## 4. Dense word embeddings
 
@@ -254,17 +260,21 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 
 * 그런데 이러한 방법론들은 분석해야 할 데이터가 많아지고 사전의 크기가 커질수록 computation의 문제에 당면하게 됩니다. 특히나 데이터를 몰빵해넣고 병렬연산으로 승부하는 딥러닝의 경우 더욱 그렇지요. 예컨대 30 개의 형태소로 된 문장을 벡터 sequence로 나타내어 recurrent neural network 같은 시스템으로 요약하고자 할 때, 딕셔너리 사이즈가 10만이라면, 10만 x 30이라는 무시무시한 사이즈의 행렬이 문장 하나를 표현하여 인풋으로 들어가게 되는거죠. 물론 아까 보았듯 사용하는 벡터의 크기는 조절할 수 있고, 각 벡터가 각 단어를 표현하는 것이 아주 명확하긴 하지만요.
 
-* 이럴 때 유용하게 사용되는 개념이 2013년 태동한 word2vec, 혹은 dense low-dimension embedding 입니다. 등장 목적이 위와 같다고는 할 수 없지만, 2006년부터 촉발된 딥러닝 아키텍쳐와 맞물려 사용되며 문장 분석의 패러다임 자체를 바꾸고 있죠. Word2vec, GloVe, fastText에 대한 설명을 간략하게만이라도 해보려 합니다.
+* 이럴 때 유용하게 사용되는 개념이 2013년 태동한 word2vec, 혹은 dense low-dimension embedding 입니다. 등장 목적이 위와 같다고는 할 수 없지만, [2006년부터 촉발된 딥러닝 아키텍쳐](http://www.cs.toronto.edu/~fritz/absps/ncfast.pdf)와 맞물려 사용되며 문장 분석의 패러다임 자체를 바꾸고 있죠. Word2vec, GloVe, fastText에 대한 설명을 간략하게만이라도 해보려 합니다.
 
 ---
 
 > The term word2Vec is very intuitive, and it converts the words, which are discrete (and were sparsely represented so far), into the numerics that are close to the continuousness. Since there are a bunch of terrific articles on the topic outside, in English, a review on word2vec and its related models are discussed mainly in Korean.
 
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/skipgram.png" width="400"><br/>
+    (Image from [the tutorial site](https://sheffieldnlp.github.io/com4513-6513/lectures_reveal_js/lecture12_word_embeddings.html). The matrix W x D is obtained by minimizing the cost function regarding the performance of context prediction given an input vector.)
+
 * word2vec이라는 말은 상당히 직관적입니다. 말 그대로 이산적 개념인 단어를 수치적 개념인 벡터로 바꿔 준다는 의미이죠. 사실 one-hot encoding 역시 고차원의 벡터를 만들어준다는 점을 생각하면 어폐가 있긴 합니다. 그래서 두 개념의 차이를 벡터가 sparse한지 (드문드문하게 nonzero인 성분이 있는지), 아니면 dense한지 (유클리드 공간에서처럼 빽빽이 들어차 있는지)를 차이점으로 봅니다. 물론 word2vec은 후자를 의미하죠.
 
 * 당연한 얘기겠지만, 어떤 방식의 워드 임베딩이든, 임베딩 벡터 셋을 트레이닝하는 과정에서 어떤 원칙 (혹은 제약조건)을 주냐에 따라 결과물로 나오는 벡터들 간의 관계가 달라지게 됩니다. 예컨대 아무 제약 조건도 주지 않는 one-hot encoding의 경우, 모든 단어가 평등합니다. 아무리 비슷해 보이는 단어들이라도 1이 위치하는 엔트리가 다르다면 아무 상관없는 단어인 것이나 다름없게 되는 것이죠. distributional semantic에 대한 고려는 one-hot vector에 들어 있지 않은 겁니다.
 
-* 모든 sparse vector가 one-hot vector같이 엔트리 간 equivalence를 지니는 건 아닙니다. 오히려 희소한 케이스에 가깝죠. 가중치를 곱해준 TF-IDF만 해도, 개별 단어를 모델링하지는 않지만 어떤 분포적인 특성이 반영되게 됩니다. binary이지만 multi-hot encoding을 차용하는 boolean distributional semantics의 경우, 의미론에서 얘기하는 feature의 개념이 등장하여, taxonomy 상 상위 위계에 해당하는 단어의 embedding이 하위 위계의 단어의 embedding에 포함되게 하는 방식으로 트레이닝이 됩니다. 아마도 벡터 사이즈는 one-hot보다는 줄어들겠죠? 벡터들 간의 distance measure가 euclidean이 아닌 어떤 이산적인 개념이 된다는 건 challenging하긴 합니다만, 언어가 기본적으로 이산적인 속성을 버릴 수 없다는 생각을 갖고 있는 저로썬 매우 매력적이라는 생각을 했습니다.
+* 모든 sparse vector가 one-hot vector같이 엔트리 간 equivalence를 지니는 건 아닙니다. 오히려 희소한 케이스에 가깝죠. 가중치를 곱해준 TF-IDF만 해도, 개별 단어를 모델링하지는 않지만 어떤 분포적인 특성이 반영되게 됩니다. binary이지만 multi-hot encoding을 차용하는 [boolean distributional semantics](https://transacl.org/ojs/index.php/tacl/article/view/616)의 경우, 의미론에서 얘기하는 feature의 개념이 등장하여, taxonomy 상 상위 위계에 해당하는 단어의 embedding이 하위 위계의 단어의 embedding에 포함되게 하는 방식으로 트레이닝이 됩니다. 아마도 벡터 사이즈는 one-hot보다는 줄어들겠죠? 벡터들 간의 distance measure가 euclidean이 아닌 어떤 이산적인 개념이 된다는 건 challenging하긴 합니다만, 언어가 기본적으로 이산적인 속성을 버릴 수 없다는 생각을 갖고 있는 저로썬 매우 매력적이라는 생각을 했습니다.
 
 * 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠.  또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
 
@@ -291,62 +301,35 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')
 
 > In the first few chapters, we've demonstrated how the corpus we've adopted is preprocessed, featurized, trained and predicted with the sparse sentence encodings. However, since we've obtained the dense word embeddings for the morphemes (as we've obtained for one-hot encoded words), it's plausible to extend it to the sentence vector, for instance by summation. 
 
-* 앞서 one-hot encoding과 tf-idf로 문장을 수치화하는 방법, 그리고 그것이 sparse vector이라는 것까지 말씀드린 바 있습니다. 정보가 discrete하다는 것은 기계에게나 사람에게나 매우 직관적으로 다가오기에, 문장의 분류에 있어 굉장히 유용하게 사용된다는 것두요. 하지만 지난 몇 시간 동안 dense word vector들을 얘기하는 동안, 그 친구들을 문장 수치화에 이용할 수 있지 않을까 생각하는 분도 분명 계실 겁니다. word2vec을 제안한 사람들의 머릿속을 들여다볼 수는 없지만, 결과적으로 그 등장이 문장 임베딩에 있어 하나의 패러다임 전환이 되었죠.  
-
-* “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
-
-* 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
-
----
-
-> This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
-
-* 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
-
-## 6. CNN-based sentence classification
-
-> [**Convolutional neural network**](https://ieeexplore.ieee.org/abstract/document/726791) (CNN), originally developed by LeCun, is a widely used neural network system which was primarily suggested for image processing (handwriting recognition). It roughly resembles the perception process of a visual system, summarizing a given image into an abstract values via repititive application of convolution and pooling. 
-
-<p align="center">
-    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/alexnet2.png" width="700"><br/>
-    (image from https://jeremykarnowski.wordpress.com/2015/07/15/alexnet-visualization/)
-
-* AI를 공부하시는 분이라면 convolutional neural network, 즉 CNN을 한번쯤 들어보셨을 겁니다. 초기에 르쿤 등등에 의해 연구되고, 6-7년 전쯤부터 폭발적으로 성장하여 지금은 이미지 관련 태스크라면 베이스라인 혹은 그 베리에이션으로 인용된다는 것두요. 그러한 이력 덕분인지, NLP에 CNN을 사용한다고 하면 의아해하는 경우가 있더군요. 저도 사실 익숙해져서 그렇지, 다시 첨부터 써보라고 하면 이게 무슨 소리야 싶을지도 모르겠네요ㅎㅎ
-
-* 제가 이미지에 CNN을 사용해본 적은 거의 없지만, 쉽게 말해 raw data를 부분부분 보고 그 정보를 추상화하는 과정을 여러번 거친다, 라고 생각하고 있습니다. 아주 러프하게요. 그것이 이미지에 처음 적용된 것이죠. 하지만 사실 정보의 추상화란 이미지에만 적용될 이유는 없습니다. 그래서 저는 cnn을 distributional information의 summarizer로 표현합니다. 어디에 무엇이 있는지 아주 간단하게 요약해 주는.
-
----
-
-> However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
-
 ```python
 import numpy as np
+from numpy import linalg as la
 
-def featurize_cnn(corpus,wdim,maxlen):
-    conv_total = np.zeros((len(corpus),maxlen,wdim,1))
+def featurize_nn(corpus,wdim):
+    nn_total = np.zeros((len(corpus),wdim))
     for i in range(len(corpus)):
         if i%1000 ==0:
             print(i)
         s = corpus[i]
+        count_word=0
         for j in range(len(s)):
-            if s[-j-1] in model_ft and j < maxlen:
-                conv_total[i][-j-1,:,0] = model_ft[s[-j-1]]
-    return conv_total
-    
-fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
+            if s[j] in model_ft:
+                nn_total[i,:] = nn_total[i,:] + model_ft[s[j]]
+                count_word = count_word + 1
+        if count_word > 0:
+            nn_total[i] = nn_total[i]/la.norm(nn_total[i])
+    return nn_total
+
+fci_nn = featurize_nn(fci_sp_token_train+fci_sp_token_test,100)
 ```
 
-<p align="center">
-    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
-    (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
+* 앞서 one-hot encoding과 tf-idf로 문장을 수치화하는 방법, 그리고 그것이 sparse vector이라는 것까지 말씀드린 바 있습니다. 정보가 discrete하다는 것은 기계에게나 사람에게나 매우 직관적으로 다가오기에, 문장의 분류에 있어 굉장히 유용하게 사용된다는 것두요. 하지만 지난 몇 시간 동안 dense word vector들을 얘기하는 동안, 그 친구들을 문장 수치화에 이용할 수 있지 않을까 생각하는 분도 분명 계실 겁니다. word2vec을 제안한 사람들의 머릿속을 들여다볼 수는 없지만, 결과적으로 그 등장이 문장 임베딩에 있어 하나의 패러다임 전환이 되었죠.  
 
-* 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
-
-* 이 때 다시 등장하는 것이 앞서 언급한 word2vec입니다. 문장을 수치화해 넣을 수 있는 일종의 고정된 사이즈의 도화지가 있다고 생각해 봅시다. 예컨대 100 x 30정도의? 거기에 100-dim word vector 30개를 padding해 넣는 겁니다. 물론 문장 길이가 30이 되지 않을 수도 있지요. 그러면 빈 부분은 0으로 채웁니다. 진짜 없으니까요. 문장이 더 길다면? 자릅니다. 물론 이 부분은 '문장 최대길이'를 조사해서 적절히 설정하면 될 일입니다 (물론 이렇게 하지 않고 모두 보존하는 방법도 있겠습니다만, 일단 여기선 다루지 않겠습니다). 이 과정에서 한국어의 head-finality를 고려하여 문장은 오른쪽에 치우치게 배열하도록 결정하였습니다. 한국어는 역시 끝까지 들어봐야 하니까, 자르더라도 끝은 남겨야죠!
+* “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의 or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
 
 ---
 
-> There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
+> And here comes the Keras, which is a widely used high-level wrapper for TensorFlow (and other libraries i.e. Theano and CNTK; though not used in general). Since we only use the *Sequential()* for the codes not incorporating the concatenated layers or attention models, only the *layer* will be imported. For the computation of average/weighted F1 score per epoch, an additional class is defined here. Also, considering the imbalance in the class volumes, we obtain the class weight set that is utilized in the training session.
 
 ```python
 import tensorflow as tf
@@ -394,6 +377,187 @@ metricsf1macro = Metricsf1macro()
 from sklearn.utils import class_weight
 class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_label), fci_label)
 ```
+
+* 본격적으로 Keras를 써볼 때가 왔습니다. 일단 제가 TensorFlow를 제대로 써본 적은 없지만, conctenated layer나 attention model같은 복잡한 시스템을 포함하지 않는 대부분의 모델들에 대해서는 Sequential() 모듈을 import하는 것으로 대부분 구현 가능합니다 ㅎㅎ TF-IDF의 evaluation에서 활용한 average/weighted F1 score을 epoch마다 계산하기 위해 별도의 함수를 정의했으며, class imbalance를 고려하여 weight set을 구했습니다. 다음의 코드에서 활용되는 것을 볼 수 있습니다.
+
+---
+
+> And the Below is the model construction and the evaluation phase. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
+
+```python
+>>> validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_8 (Dense)              (None, 128)               12928     
+_________________________________________________________________
+dense_9 (Dense)              (None, 7)                 903       
+=================================================================
+Total params: 13,831
+Trainable params: 13,831
+Non-trainable params: 0
+_________________________________________________________________
+Train on 51684 samples, validate on 5743 samples
+Epoch 1/30
+51568/51684 [============================>.] - ETA: 0s - loss: 0.8395 - acc: 0.7203— val_f1: 0.529105 — val_precision: 0.574037 — val_recall: 0.514271
+— val_f1_w: 0.728250 — val_precision_w: 0.717994 — val_recall_w: 0.746648
+51684/51684 [==============================] - 6s 125us/step - loss: 0.8396 - acc: 0.7202 - val_loss: 0.7489 - val_acc: 0.7466
+Epoch 2/30
+51344/51684 [============================>.] - ETA: 0s - loss: 0.7221 - acc: 0.7553— val_f1: 0.551772 — val_precision: 0.649961 — val_recall: 0.539155
+— val_f1_w: 0.738922 — val_precision_w: 0.742050 — val_recall_w: 0.755877
+51684/51684 [==============================] - 6s 119us/step - loss: 0.7218 - acc: 0.7552 - val_loss: 0.7044 - val_acc: 0.7559
+Epoch 3/30
+51344/51684 [============================>.] - ETA: 0s - loss: 0.6854 - acc: 0.7677— val_f1: 0.579180 — val_precision: 0.689582 — val_recall: 0.555189
+— val_f1_w: 0.759864 — val_precision_w: 0.768206 — val_recall_w: 0.774856
+51684/51684 [==============================] - 6s 121us/step - loss: 0.6856 - acc: 0.7676 - val_loss: 0.6680 - val_acc: 0.7749
+Epoch 4/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.6590 - acc: 0.7778— val_f1: 0.578035 — val_precision: 0.707392 — val_recall: 0.548753
+— val_f1_w: 0.759995 — val_precision_w: 0.768224 — val_recall_w: 0.776423
+51684/51684 [==============================] - 6s 121us/step - loss: 0.6590 - acc: 0.7778 - val_loss: 0.6499 - val_acc: 0.7764
+Epoch 5/30
+51664/51684 [============================>.] - ETA: 0s - loss: 0.6376 - acc: 0.7843— val_f1: 0.604010 — val_precision: 0.704348 — val_recall: 0.579958
+— val_f1_w: 0.773616 — val_precision_w: 0.779264 — val_recall_w: 0.787393
+51684/51684 [==============================] - 6s 120us/step - loss: 0.6375 - acc: 0.7843 - val_loss: 0.6299 - val_acc: 0.7874
+Epoch 6/30
+51600/51684 [============================>.] - ETA: 0s - loss: 0.6201 - acc: 0.7918— val_f1: 0.601519 — val_precision: 0.725732 — val_recall: 0.572787
+— val_f1_w: 0.779200 — val_precision_w: 0.788667 — val_recall_w: 0.794184
+51684/51684 [==============================] - 6s 121us/step - loss: 0.6199 - acc: 0.7919 - val_loss: 0.6151 - val_acc: 0.7942
+Epoch 7/30
+51296/51684 [============================>.] - ETA: 0s - loss: 0.6050 - acc: 0.7957— val_f1: 0.614793 — val_precision: 0.710008 — val_recall: 0.585230
+— val_f1_w: 0.783822 — val_precision_w: 0.786432 — val_recall_w: 0.796622
+51684/51684 [==============================] - 6s 122us/step - loss: 0.6051 - acc: 0.7957 - val_loss: 0.6045 - val_acc: 0.7966
+Epoch 8/30
+51360/51684 [============================>.] - ETA: 0s - loss: 0.5917 - acc: 0.8013— val_f1: 0.620563 — val_precision: 0.726211 — val_recall: 0.588463
+— val_f1_w: 0.790249 — val_precision_w: 0.797681 — val_recall_w: 0.803239
+51684/51684 [==============================] - 6s 121us/step - loss: 0.5916 - acc: 0.8013 - val_loss: 0.5926 - val_acc: 0.8032
+Epoch 9/30
+51568/51684 [============================>.] - ETA: 0s - loss: 0.5803 - acc: 0.8052— val_f1: 0.614362 — val_precision: 0.755863 — val_recall: 0.581659
+— val_f1_w: 0.787776 — val_precision_w: 0.808819 — val_recall_w: 0.800104
+51684/51684 [==============================] - 6s 120us/step - loss: 0.5801 - acc: 0.8052 - val_loss: 0.5963 - val_acc: 0.8001
+Epoch 10/30
+51440/51684 [============================>.] - ETA: 0s - loss: 0.5694 - acc: 0.8096— val_f1: 0.630415 — val_precision: 0.731874 — val_recall: 0.597364
+— val_f1_w: 0.797703 — val_precision_w: 0.804632 — val_recall_w: 0.808985
+51684/51684 [==============================] - 6s 117us/step - loss: 0.5696 - acc: 0.8095 - val_loss: 0.5745 - val_acc: 0.8090
+Epoch 11/30
+51552/51684 [============================>.] - ETA: 0s - loss: 0.5602 - acc: 0.8131— val_f1: 0.647759 — val_precision: 0.721144 — val_recall: 0.614857
+— val_f1_w: 0.801638 — val_precision_w: 0.806856 — val_recall_w: 0.810030
+51684/51684 [==============================] - 6s 122us/step - loss: 0.5599 - acc: 0.8132 - val_loss: 0.5724 - val_acc: 0.8100
+Epoch 12/30
+51488/51684 [============================>.] - ETA: 0s - loss: 0.5504 - acc: 0.8164— val_f1: 0.649932 — val_precision: 0.721899 — val_recall: 0.617662
+— val_f1_w: 0.804792 — val_precision_w: 0.806620 — val_recall_w: 0.813164
+51684/51684 [==============================] - 6s 122us/step - loss: 0.5508 - acc: 0.8162 - val_loss: 0.5684 - val_acc: 0.8132
+Epoch 13/30
+51680/51684 [============================>.] - ETA: 0s - loss: 0.5428 - acc: 0.8187— val_f1: 0.630203 — val_precision: 0.752922 — val_recall: 0.597303
+— val_f1_w: 0.799447 — val_precision_w: 0.808868 — val_recall_w: 0.811771
+51684/51684 [==============================] - 6s 122us/step - loss: 0.5429 - acc: 0.8187 - val_loss: 0.5601 - val_acc: 0.8118
+Epoch 14/30
+51568/51684 [============================>.] - ETA: 0s - loss: 0.5362 - acc: 0.8222— val_f1: 0.644598 — val_precision: 0.750094 — val_recall: 0.609115
+— val_f1_w: 0.805831 — val_precision_w: 0.814307 — val_recall_w: 0.816820
+51684/51684 [==============================] - 6s 122us/step - loss: 0.5360 - acc: 0.8223 - val_loss: 0.5551 - val_acc: 0.8168
+Epoch 15/30
+51392/51684 [============================>.] - ETA: 0s - loss: 0.5291 - acc: 0.8226— val_f1: 0.648176 — val_precision: 0.743461 — val_recall: 0.611869
+— val_f1_w: 0.807041 — val_precision_w: 0.814813 — val_recall_w: 0.816298
+51684/51684 [==============================] - 6s 122us/step - loss: 0.5288 - acc: 0.8227 - val_loss: 0.5520 - val_acc: 0.8163
+Epoch 16/30
+51488/51684 [============================>.] - ETA: 0s - loss: 0.5224 - acc: 0.8261— val_f1: 0.649435 — val_precision: 0.740358 — val_recall: 0.612228
+— val_f1_w: 0.806029 — val_precision_w: 0.813032 — val_recall_w: 0.815776
+51684/51684 [==============================] - 6s 123us/step - loss: 0.5221 - acc: 0.8262 - val_loss: 0.5482 - val_acc: 0.8158
+Epoch 17/30
+51472/51684 [============================>.] - ETA: 0s - loss: 0.5163 - acc: 0.8290— val_f1: 0.653423 — val_precision: 0.753656 — val_recall: 0.614267
+— val_f1_w: 0.811074 — val_precision_w: 0.817580 — val_recall_w: 0.820651
+51684/51684 [==============================] - 6s 120us/step - loss: 0.5163 - acc: 0.8291 - val_loss: 0.5456 - val_acc: 0.8207
+Epoch 18/30
+51584/51684 [============================>.] - ETA: 0s - loss: 0.5106 - acc: 0.8299— val_f1: 0.654337 — val_precision: 0.747464 — val_recall: 0.621937
+— val_f1_w: 0.811604 — val_precision_w: 0.817200 — val_recall_w: 0.821348
+51684/51684 [==============================] - 6s 120us/step - loss: 0.5106 - acc: 0.8299 - val_loss: 0.5420 - val_acc: 0.8213
+Epoch 19/30
+51408/51684 [============================>.] - ETA: 0s - loss: 0.5053 - acc: 0.8319— val_f1: 0.647264 — val_precision: 0.752377 — val_recall: 0.609879
+— val_f1_w: 0.800680 — val_precision_w: 0.805022 — val_recall_w: 0.811248
+51684/51684 [==============================] - 6s 118us/step - loss: 0.5053 - acc: 0.8319 - val_loss: 0.5506 - val_acc: 0.8112
+Epoch 20/30
+51328/51684 [============================>.] - ETA: 0s - loss: 0.4988 - acc: 0.8343— val_f1: 0.671217 — val_precision: 0.737495 — val_recall: 0.640099
+— val_f1_w: 0.814082 — val_precision_w: 0.817465 — val_recall_w: 0.821174
+51684/51684 [==============================] - 6s 117us/step - loss: 0.4997 - acc: 0.8341 - val_loss: 0.5360 - val_acc: 0.8212
+Epoch 21/30
+51264/51684 [============================>.] - ETA: 0s - loss: 0.4944 - acc: 0.8366— val_f1: 0.664458 — val_precision: 0.740520 — val_recall: 0.632045
+— val_f1_w: 0.812932 — val_precision_w: 0.817124 — val_recall_w: 0.821696
+51684/51684 [==============================] - 6s 120us/step - loss: 0.4946 - acc: 0.8366 - val_loss: 0.5365 - val_acc: 0.8217
+Epoch 22/30
+51392/51684 [============================>.] - ETA: 0s - loss: 0.4904 - acc: 0.8366— val_f1: 0.652959 — val_precision: 0.728956 — val_recall: 0.616198
+— val_f1_w: 0.808515 — val_precision_w: 0.812157 — val_recall_w: 0.817517
+51684/51684 [==============================] - 6s 121us/step - loss: 0.4905 - acc: 0.8366 - val_loss: 0.5426 - val_acc: 0.8175
+Epoch 23/30
+51312/51684 [============================>.] - ETA: 0s - loss: 0.4854 - acc: 0.8395— val_f1: 0.683792 — val_precision: 0.733536 — val_recall: 0.653159
+— val_f1_w: 0.818489 — val_precision_w: 0.819629 — val_recall_w: 0.823263
+51684/51684 [==============================] - 6s 122us/step - loss: 0.4857 - acc: 0.8395 - val_loss: 0.5363 - val_acc: 0.8233
+Epoch 24/30
+51264/51684 [============================>.] - ETA: 0s - loss: 0.4815 - acc: 0.8404— val_f1: 0.670460 — val_precision: 0.751412 — val_recall: 0.632046
+— val_f1_w: 0.814917 — val_precision_w: 0.816401 — val_recall_w: 0.823263
+51684/51684 [==============================] - 6s 119us/step - loss: 0.4813 - acc: 0.8403 - val_loss: 0.5349 - val_acc: 0.8233
+Epoch 25/30
+51456/51684 [============================>.] - ETA: 0s - loss: 0.4778 - acc: 0.8422— val_f1: 0.660602 — val_precision: 0.767336 — val_recall: 0.616146
+— val_f1_w: 0.817814 — val_precision_w: 0.826908 — val_recall_w: 0.827442
+51684/51684 [==============================] - 6s 121us/step - loss: 0.4774 - acc: 0.8423 - val_loss: 0.5352 - val_acc: 0.8274
+Epoch 26/30
+51360/51684 [============================>.] - ETA: 0s - loss: 0.4739 - acc: 0.8426— val_f1: 0.665963 — val_precision: 0.774288 — val_recall: 0.624489
+— val_f1_w: 0.818409 — val_precision_w: 0.826185 — val_recall_w: 0.827442
+51684/51684 [==============================] - 6s 118us/step - loss: 0.4736 - acc: 0.8427 - val_loss: 0.5307 - val_acc: 0.8274
+Epoch 27/30
+51296/51684 [============================>.] - ETA: 0s - loss: 0.4697 - acc: 0.8438— val_f1: 0.683299 — val_precision: 0.737117 — val_recall: 0.652833
+— val_f1_w: 0.822906 — val_precision_w: 0.823076 — val_recall_w: 0.828661
+51684/51684 [==============================] - 6s 120us/step - loss: 0.4698 - acc: 0.8437 - val_loss: 0.5255 - val_acc: 0.8287
+```
+
+* 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
+
+---
+
+> This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
+
+* 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
+
+## 6. CNN-based sentence classification
+
+> [**Convolutional neural network**](https://ieeexplore.ieee.org/abstract/document/726791) (CNN), originally developed by LeCun, is a widely used neural network system which was primarily suggested for image processing (handwriting recognition). It roughly resembles the perception process of a visual system, summarizing a given image into an abstract values via repititive application of convolution and pooling. 
+
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/alexnet2.png" width="700"><br/>
+    (image from https://jeremykarnowski.wordpress.com/2015/07/15/alexnet-visualization/)
+
+* AI를 공부하시는 분이라면 convolutional neural network, 즉 CNN을 한번쯤 들어보셨을 겁니다. 초기에 르쿤 등등에 의해 연구되고, 6-7년 전쯤부터 폭발적으로 성장하여 지금은 이미지 관련 태스크라면 베이스라인 혹은 그 베리에이션으로 인용된다는 것두요. 그러한 이력 덕분인지, NLP에 CNN을 사용한다고 하면 의아해하는 경우가 있더군요. 저도 사실 익숙해져서 그렇지, 다시 첨부터 써보라고 하면 이게 무슨 소리야 싶을지도 모르겠네요ㅎㅎ
+
+* 제가 이미지에 CNN을 사용해본 적은 거의 없지만, 쉽게 말해 raw data를 부분부분 보고 그 정보를 추상화하는 과정을 여러번 거친다, 라고 생각하고 있습니다. 아주 러프하게요. 그것이 이미지에 처음 적용된 것이죠. 하지만 사실 정보의 추상화란 이미지에만 적용될 이유는 없습니다. 그래서 저는 cnn을 distributional information의 summarizer로 표현합니다. 어디에 무엇이 있는지 아주 간단하게 요약해 주는.
+
+---
+
+> However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
+
+```python
+def featurize_cnn(corpus,wdim,maxlen):
+    conv_total = np.zeros((len(corpus),maxlen,wdim,1))
+    for i in range(len(corpus)):
+        if i%1000 ==0:
+            print(i)
+        s = corpus[i]
+        for j in range(len(s)):
+            if s[-j-1] in model_ft and j < maxlen:
+                conv_total[i][-j-1,:,0] = model_ft[s[-j-1]]
+    return conv_total
+    
+fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
+```
+
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
+    (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
+
+* 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
+
+* 이 때 다시 등장하는 것이 앞서 언급한 word2vec입니다. 문장을 수치화해 넣을 수 있는 일종의 고정된 사이즈의 도화지가 있다고 생각해 봅시다. 예컨대 100 x 30정도의? 거기에 100-dim word vector 30개를 padding해 넣는 겁니다. 물론 문장 길이가 30이 되지 않을 수도 있지요. 그러면 빈 부분은 0으로 채웁니다. 진짜 없으니까요. 문장이 더 길다면? 자릅니다. 물론 이 부분은 '문장 최대길이'를 조사해서 적절히 설정하면 될 일입니다 (물론 이렇게 하지 않고 모두 보존하는 방법도 있겠습니다만, 일단 여기선 다루지 않겠습니다). 이 과정에서 한국어의 head-finality를 고려하여 문장은 오른쪽에 치우치게 배열하도록 결정하였습니다. 한국어는 역시 끝까지 들어봐야 하니까, 자르더라도 끝은 남겨야죠!
+
+---
+
+> There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
 
 ```python
 def validate_cnn(result,y,filters,hidden_dim,cw,filename):
