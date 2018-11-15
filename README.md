@@ -209,7 +209,7 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 
 ---
 
-The result is as below; it is weird that the bigram features yielded quite a lower accuracy. It is assumed that the property of the corpus, where the sentence label does not depend solely on the polarity items or emotion words, may have affected the performance. Also, the dimension of the feature (3,000) which was fixed to guarantee the fair comparison between the two models, could have been a harsh obstacle for the bigram model.
+> The result is as below; it is weird that the bigram features yielded quite a lower accuracy. It is assumed that the property of the corpus, where the sentence label does not depend solely on the polarity items or emotion words, may have affected the performance. Also, the dimension of the feature (3,000) which was fixed to guarantee the fair comparison between the two models, could have been a harsh obstacle for the bigram model.
 
 ```properties
 # CONSOLE RESULT
@@ -508,6 +508,8 @@ Epoch 27/30
 51684/51684 [==============================] - 6s 120us/step - loss: 0.4698 - acc: 0.8437 - val_loss: 0.5255 - val_acc: 0.8287
 ```
 
+* TF-IDF의 결과들이 그렇게 만족스럽지는 못했다는 걸 생각하면, 괄목할 만한 성장입니다. accuracy도 올랐고, F1의 평균값 (val_f1)도 상당한 수준으로 상승했네요. one-hot vector을 만들 때 그랬던 것처럼 그냥 구성요소들을 더했을 뿐인데 ...?
+
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
 
 ---
@@ -578,6 +580,16 @@ def validate_cnn(result,y,filters,hidden_dim,cw,filename):
 validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
 ```
 
+* 일단 image를 cnn에 적용하는 과정을 패러미터화하면, 채널, 필터, 컨벌루션레이어, 윈도우, 풀링 정도로 요약할 수 있습니다. 채널은 앞서 말했듯 rgb 같이 몇 개의 요소로 나타내냐이며 필터는 얼마나 병렬로 처리할거냐, 컨벌루션레이어 수는 추상화 과정을 몇번 거칠거냐, 윈도우는 어떤 식으로 각 컨벌루션 레이어를 훑을거냐, 풀링은 컨벌루션 레이어를 훑은 값들에서 중요한 요소들을 어떻게 취사선택할거냐? 이정도로 나타낼 수 있겠네요.
+
+* 이미지의 cnn은 그래서 일반적으로 3채널, 많은 필터 (>64?), 다층 컨벌루션 레이어, 상하좌우로 stride되는 3 by 3 혹은 5 by 5 window 등으로 요약될 수 있습니다. 물론 alexnet, vgg, yolo 등 다양한 아키텍쳐들이 있고, 모두 특색이 있겠지만, 기본적으론 저렇습니다. 하지만 word vector sequence에서 상하좌우로 움직이는 window가 어떤 의미가 있을까요? 우리는 100dim의 벡터 각 엔트리에 어떤 성질의 성분들이 자리잡고 있는지 알지 못하며, 굳이 그런 성질을 지정해줄 필요도 느끼지 못하였습니다. 이미지는 두차원 모두가 semantic을 포함하지만, sentence에서 semantic이 의미가 있는 방향은 word vector가 pad되는 방향이니까요.
+
+* 그래서 저는 sentence의 cnn에선 3 by 100 혹은 5 by 100 window를 사용합니다. 결론적으론 2D convolution이 1D처럼 돼버리긴 합니다만, 역설적으로 문장을 그림이 아니라 문장처럼 볼 수 있는 방법이 되는 것 같아요. Word2vec의 결과물로 나온 그 단어의 vector의 특색을 결정짓는 entry를 가장 왜곡 없이 전달해줄 수 있는 방법이라고 저는 보고 있습니다. 그 이후의 max-pooling과 추가적인 convolution 아키텍쳐는 개인의 선택에 달렸지만요. Boolean distributional semantics처럼 word vector의 각 entry가 어떤 의미를 갖는다면 모르겠지만, 그렇지 않다면 문장은 문장처럼 읽는 것이 cnn에 있어서도 효과적이지 않나? 라는 것이 저의 생각입니다. (물론 반례 및 피드백은 언제나 환영입니다!)
+
+---
+
+> The result is encouraging! Although there was a little improvement in F1 score, we had about a 20% RRER for the accuracy (regarding the model with the best performance). The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
+
 ```properties
 # CONSOLE RESULT
 >>> validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
@@ -627,25 +639,25 @@ Epoch 6/30
 51684/51684 [==============================] - 19s 371us/step - loss: 0.3264 - acc: 0.8880 - val_loss: 0.4331 - val_acc: 0.8607
 ```
 
-* 일단 image를 cnn에 적용하는 과정을 패러미터화하면, 채널, 필터, 컨벌루션레이어, 윈도우, 풀링 정도로 요약할 수 있습니다. 채널은 앞서 말했듯 rgb 같이 몇 개의 요소로 나타내냐이며 필터는 얼마나 병렬로 처리할거냐, 컨벌루션레이어 수는 추상화 과정을 몇번 거칠거냐, 윈도우는 어떤 식으로 각 컨벌루션 레이어를 훑을거냐, 풀링은 컨벌루션 레이어를 훑은 값들에서 중요한 요소들을 어떻게 취사선택할거냐? 이정도로 나타낼 수 있겠네요.
-
-* 이미지의 cnn은 그래서 일반적으로 3채널, 많은 필터 (>64?), 다층 컨벌루션 레이어, 상하좌우로 stride되는 3 by 3 혹은 5 by 5 window 등으로 요약될 수 있습니다. 물론 alexnet, vgg, yolo 등 다양한 아키텍쳐들이 있고, 모두 특색이 있겠지만, 기본적으론 저렇습니다. 하지만 word vector sequence에서 상하좌우로 움직이는 window가 어떤 의미가 있을까요? 우리는 100dim의 벡터 각 엔트리에 어떤 성질의 성분들이 자리잡고 있는지 알지 못하며, 굳이 그런 성질을 지정해줄 필요도 느끼지 못하였습니다. 이미지는 두차원 모두가 semantic을 포함하지만, sentence에서 semantic이 의미가 있는 방향은 word vector가 pad되는 방향이니까요.
-
-* 그래서 저는 sentence의 cnn에선 3 by 100 혹은 5 by 100 window를 사용합니다. 결론적으론 2D convolution이 1D처럼 돼버리긴 합니다만, 역설적으로 문장을 그림이 아니라 문장처럼 볼 수 있는 방법이 되는 것 같아요. Word2vec의 결과물로 나온 그 단어의 vector의 특색을 결정짓는 entry를 가장 왜곡 없이 전달해줄 수 있는 방법이라고 저는 보고 있습니다. 그 이후의 max-pooling과 추가적인 convolution 아키텍쳐는 개인의 선택에 달렸지만요. Boolean distributional semantics처럼 word vector의 각 entry가 어떤 의미를 갖는다면 모르겠지만, 그렇지 않다면 문장은 문장처럼 읽는 것이 cnn에 있어서도 효과적이지 않나? 라는 것이 저의 생각입니다. (물론 반례 및 피드백은 언제나 환영입니다!)
-
----
-
-> The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
+* 결과입니다. F1 score에서는 그렇게 큰 향상을 얻지는 못했으나, accuracy는 0.8287에서 0.8607로, error rate가 약 17%에서 14%로 감소하며 약 20%의 에러율 감소 (RRER)을 보였습니다. 아무래도 distributional한 information을 반영하는 것이, 단순히 existence를 체크하는 것보다는 더 정확하겠죠.
 
 * 이상으로 distributional information의 가장 효과적인 summarizer 중 하나에 대하여 살펴봤습니다. 하지만 그 단점은, non-consecutive한 성분들 간의 상관관계를 설명하기 쉽지 않다는 점이죠. 다음 편부터 설명되는 rnn은 그러한 점들을 보완합니다.
 
 ## 7. RNN (BiLSTM)-based sentence classification
 
-* 마지막 즈음에 rnn을 언급하며, non-consecutive한 요소들의 상관관계를 파악하기에 용이한 수단이라는 이야기를 한 바 있습니다. 저번에 댓글로 '멀리 떨어져 있는 녀석들이 갖고 있는 관계를 모델링할 수 있다는 것'이라 말씀드린 바 있는데, 좀 더 자세히는 '존재해야 하는 요소들이 꼭 순차적으로 나오지 않아도 그 존재성을 파악할 수 있다' 이렇게 말씀드리는 게 좀 더 나을 것 같습니다.
+> **Recurrent neural network (RNN)**, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to the high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [**long short-term memory (LSTM)**](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).
 
-* rnn, 즉 recurrent neural network란 time-series의 input을 받아, 그에 대한 latent information을 담고 있는 hidden layer sequence를 생성하되, 특정 시점에서의 hidden layer가 그 시점에서의 input data와 이전 시점의 hidden layer로부터 연산되는 알고리듬입니다. hidden Markov model (HMM)과 그 컨셉은 유사하지만 바로 이전 시점에만 영향받지 않고, 앞서 있는 데이터 모두의 정보를 뒷부분의 hidden layer에 반영한다는 장점이 있죠. 쉽게 말해 sequential data의 summarization이라고 보면 될 것 같네요.
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/rnn.jpg" width="700"><br/>
+    (image from https://aikorea.org/blog/rnn-tutorial-1/)
 
-* rnn을 트레이닝하는 과정 역시 일반적인 mlp나 cnn에서와 마찬가지로 back-propagation을 이용하게 되는데요, 이 과정에서 vanishing gradient의 문제가 발생하게 됩니다. 너무 많은 정보들이 encoding되다 보니 패러미터가 폭발해 버리는 겁니다. 사람은 이와 다르게, 문장이나 글이 길어지게 되면 너무 멀리 떨어져 있는 정보는 잊어버리죠 :D 뭐 그게 꼭 좋은 건 아니겠지만서두, 정보 과잉을 방지해주거나 뭐 그렇지 않겠습니까? 그런 컨셉으로 나온 것이 적당히 forget gate를 추가한, 1997년의 **long short-term memory (LSTM)** 입니다. lstm이 앞부분의 정보를 반영하지 못한다는 단점을 보완하기 위해 제시된 것이, lstm을 양방향으로 (처음에서 시작해서 끝으로, 끝에서 시작해서 처음으로) 하여 얻은 hidden layer sequences를 augment한 Bidirectional lstm도 같은 해에 제시되었구요. 생각보다 옛날인데 왜 이제 와서 유행하게 됐냐구요? 계산량이 엄청나기 때문이죠... 갓비디아 짱짱컴퍼니
+* RNN, 즉 recurrent neural network란 time-series의 input을 받아, 그에 대한 latent information을 담고 있는 hidden layer sequence를 생성하되, 특정 시점에서의 hidden layer가 그 시점에서의 input data와 이전 시점의 hidden layer로부터 연산되는 알고리듬입니다. hidden Markov model (HMM)과 그 컨셉은 유사하지만 바로 이전 시점에만 영향받지 않고, 앞서 있는 데이터 모두의 정보를 뒷부분의 hidden layer에 반영한다는 장점이 있죠. 쉽게 말해 sequential data의 summarization이라고 보면 될 것 같네요.
+
+* rnn을 트레이닝하는 과정 역시 일반적인 mlp나 cnn에서와 마찬가지로 back-propagation을 이용하게 되는데요, 이 과정에서 vanishing gradient의 문제가 발생하게 됩니다. 너무 많은 정보들이 encoding되다 보니 패러미터가 폭발해 버리는 겁니다. 사람은 이와 다르게, 문장이나 글이 길어지게 되면 너무 멀리 떨어져 있는 정보는 잊어버리죠 :D 뭐 그게 꼭 좋은 건 아니겠지만서두, 정보 과잉을 방지해주거나 뭐 그렇지 않겠습니까? 그런 컨셉으로 나온 것이 적당히 forget gate를 추가한, 1997년의 long short-term memory (LSTM) 입니다. lstm이 앞부분의 정보를 반영하지 못한다는 단점을 보완하기 위해 제시된 것이, lstm을 양방향으로 (처음에서 시작해서 끝으로, 끝에서 시작해서 처음으로) 하여 얻은 hidden layer sequences를 augment한 Bidirectional lstm도 같은 해에 제시되었구요. 생각보다 옛날인데 왜 이제 와서 유행하게 됐냐구요? 계산량이 엄청나기 때문이죠... 갓비디아 짱짱컴퍼니
+
+---
+
+> In this tutorial, we utilize the BiLSTM structure. The featurization is almost identical to the case of CNN, except that the channel information is omitted. To say short, for the same data (ignoring the channel number), CNN extracts locally notable features and RNN extracts the relations reflected in the sequential arrangement.
 
 ```python
 def featurize_rnn(corpus,wdim,maxlen):
@@ -663,9 +675,7 @@ fci_rnn = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 from keras.layers import LSTM
 from keras.layers import Bidirectional
-```
 
-```python
 def validate_bilstm(result,y,hidden_lstm,hidden_dim,cw,filename):
     model = Sequential()
     model.add(Bidirectional(LSTM(hidden_lstm), input_shape=(len(result[0]), len(result[0][0]))))
@@ -680,6 +690,12 @@ def validate_bilstm(result,y,hidden_lstm,hidden_dim,cw,filename):
 
 validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 ```
+
+* 본 튜토리얼에서는 가장 무난히 적용할 수 있는 BiLSTM을 사용합니다. LSTM의 문제는 문장이 길어질수록 앞부분의 내용을 반영하지 못할 수 있다는 것인데, BiLSTM은 LSTM을 양방향으로 돌린 두 sequence를 hidden layer sequence 하나로 concatenate하면서 어느 정도 그런 점을 보완할 수 있게 합니다. CNN과 간단히 차이를 말해 보자면, CNN은 global하게 본 후 local하게 중요한 피쳐들을 뽑아내어 추상화시키는 것이고, RNN (BiLSTM)은 sequential한 배열에 내재한 관계를 추상화한다고 보면 될 것 같습니다. 
+
+---
+
+> We obtained another boost in performance, especially very high in F1 score. This implies that our task which deals with the intention of Korean sentences is largely influenced by the word order. This may have been an important factor in identifying the rhetoricalness, for instance, '뭐 해 지금 (what / do / now, *what (the hell) are you doing now*)' sounds much more rhetorical than '지금 뭐 해 (now / what / do, *what are you doing now*)', in view of native. However, so far we've conducted the experiments given the morpheme decomposition. Will the real semantics NOT be embedded in the characters? Well, before that, how should **character** be defined in Korean, which has distinguished morpho-syllabic blocks (which are different from alphabets) as a unit of character? 
 
 ```properties
 # CONSOLE RESULT
@@ -752,6 +768,9 @@ Epoch 13/30
 — val_f1_w: 0.875957 — val_precision_w: 0.877898 — val_recall_w: 0.878983
 51684/51684 [==============================] - 82s 2ms/step - loss: 0.2445 - acc: 0.9152 - val_loss: 0.3942 - val_acc: 0.8790
 ```
+
+* 놀랍게도 정확도가 다시 한번 올랐고, F1 score가 상당한 수준으로 올랐습니다. 평균치가 저 정도 올랐다는 것은, 이제 아무리 F1 score가 안 좋아도 0.5 정도는 된다는 걸 의미한다고 봐도 무방할 것 같습니다. 처음에 TF-IDF로 코드를 돌릴 때 intonation-dependent utterances (마지막 case) 에 대해 상당히 낮은 F1 score가 나왔던 것 같은데, 해당 태스크에서 상대적으로 Recall (재현률)을 높게 하여 false alarm을 울리는 것이 false positive보다는 낫다는 점을 고려하면 나쁘지 않은 결과입니다. 그런데 한 가지 간과한 것이 있습니다. 지금까지 우리는 열심히 morpheme들을 가지고 놀았는데, 과연 이것을 character-level로 끊어 보면 어떻게 될까요? 아니, 그 전에 우선, 한국어에서 character을 어떻게 정의하는 것이 바람직할까요?
+
 ## 8. Character embedding
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
