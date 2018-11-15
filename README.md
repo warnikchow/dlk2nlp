@@ -6,6 +6,15 @@
 ## Requirements
 #### The recommended versions are in *Requirements.txt*, but can be replaced depending on the environment
 fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk, numpy, scikit-learn, tensorflow-gpu
+#### Download [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor) and place in the folder named *vectors*. For the utilization of the dictionary, cite the following paper:
+```
+@article{cho2018real,
+	title={Real-time Automatic Word Segmentation for User-generated Text},
+	author={Cho, Won Ik and Cheon, Sung Jun and Kang, Woo Hyun and Kim, Ji Won and Kim, Nam Soo},
+	journal={arXiv preprint arXiv:1810.13113},
+	year={2018}
+}
+```
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
