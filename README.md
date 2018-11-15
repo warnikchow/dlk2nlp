@@ -384,7 +384,7 @@ class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_
 
 > And the Below is the model construction and the evaluation phase. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
 
-```python
+```properties
 >>> validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
