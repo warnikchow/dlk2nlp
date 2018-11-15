@@ -16,7 +16,7 @@ fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.
 	year={2018}
 }
 ```
-#### For the utilization of the [dataset](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt), cite the following:
+#### Download the [dataset](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt) and place inn the folder named *data*. For the utilization of the dataset, cite the following:
 ```
 @article{cho2018speech,
 	title={Speech Intention Understanding in a Head-final Language: A Disambiguation Utilizing Intonation-dependency},
