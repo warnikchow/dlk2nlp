@@ -5,7 +5,7 @@
 
 ## Requirements
 #### The recommended versions are in *Requirements.txt*, but can be replaced depending on the environment
-Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk, numpy, scikit-learn, tensorflow-gpu
+fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk, numpy, scikit-learn, tensorflow-gpu
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
