@@ -1,3 +1,4 @@
+fasttext==0.8.3
 Keras==2.1.2
 konlpy==0.4.4
 nltk==3.3
