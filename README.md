@@ -694,7 +694,7 @@ def featurize_rnn(corpus,wdim,maxlen):
                 rnn_total[i][-j-1,:] = model_ft[s[-j-1]]
     return rnn_total
 
-fci_rnn = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)
+fci_rec = featurize_rnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 from keras.layers import LSTM
 from keras.layers import Bidirectional
