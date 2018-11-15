@@ -1,6 +1,6 @@
 # DLK2NLP: Day-by-day Line-by-line Keras-based Korean NLP
 ## Sentence classification: From data construction to BiLSTM self-attention
-#### The tutorial is provided in both English (for *Korean* NLP learners) and Korean (for Korean *NLP* learners) - but the meanings may differ.
+### The tutorial is provided in both English (for *Korean* NLP learners) and Korean (for Korean *NLP* learners) - but the meanings may differ.
 * 문장 분류 task를 중심으로 본 한국어 NLP 튜토리얼입니다. 본 튜토리얼에 사용된 컨텐츠 일부는 [페이스북 페이지](https://www.facebook.com/nobodybelongs/notes/)에 기고했던 글에서 발췌하였음을 명시합니다. 한국어 NLP를 하고 싶은 외국인들과 NLP를 배워보고 싶은 한국인들을 모두 대상으로 하여 영/한 설명을 모두 제공하나, 번역이 아닌 의역이며 내용도 다를 수 있습니다.
 
 
