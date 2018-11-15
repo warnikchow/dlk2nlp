@@ -382,9 +382,22 @@ class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_
 
 ---
 
-> And the Below is the model construction and the evaluation phase. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
+> And the Below is the model construction and the evaluation phase. Note that the folder *tutorial* was created in the same directory to save the checkpoint models, recording F1 scores and the accuracy. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
 
 ```properties
+def validate_nn(result,y,hidden_dim,cw,filename):
+    model = Sequential()
+    model.add(layers.Dense(hidden_dim, activation = 'relu', input_dim=len(result[0])))
+    model.add(layers.Dense(int(max(y))+1, activation='softmax'))
+    model.summary()
+    model.compile(optimizer=adam_half, loss="sparse_categorical_crossentropy", metrics=['accuracy'])
+    filepath=filename+"-{epoch:02d}-{val_acc:.4f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, mode='max')
+    callbacks_list = [metricsf1macro,checkpoint]
+    model.fit(result,y,validation_split=0.1,epochs=30,batch_size=16,callbacks=callbacks_list,class_weight=cw)
+
+validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
+
 >>> validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
@@ -508,7 +521,7 @@ Epoch 27/30
 51684/51684 [==============================] - 6s 120us/step - loss: 0.4698 - acc: 0.8437 - val_loss: 0.5255 - val_acc: 0.8287
 ```
 
-* TF-IDF의 결과들이 그렇게 만족스럽지는 못했다는 걸 생각하면, 괄목할 만한 성장입니다. accuracy도 올랐고, F1의 평균값 (val_f1)도 상당한 수준으로 상승했네요. one-hot vector을 만들 때 그랬던 것처럼 그냥 구성요소들을 더했을 뿐인데 ...?
+* 모델 construction과 training-evaluation입니다. 매 checkpoint에서 모델들이 tutorial이라는 폴더에 저장되어야 하니, 미리 만들어 두어야겠죠 ㅎㅎ TF-IDF의 결과들이 그렇게 만족스럽지는 못했다는 걸 생각하면, 괄목할 만한 성장입니다. accuracy도 올랐고, F1의 평균값 (val_f1)도 상당한 수준으로 상승했네요. one-hot vector을 만들 때 그랬던 것처럼 그냥 구성요소들을 더했을 뿐인데 ...?
 
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
 
