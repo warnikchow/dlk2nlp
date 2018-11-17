@@ -25,6 +25,8 @@ fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.
 	year={2018}
 }
 ```
+#### For the data, an advanced version (more utterances on fragments and IUs, rearrangement for some utterances) is being prepared. Might be released before 2019.
+* FR과 IU를 보강하고 일부 문장들을 재배열한 advanced version의 data를 준비 중이며, 2019년이 되기 전에는 release할 계획입니다. 코퍼스 변경 시 명시해 두도록 하겠습니다.
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
