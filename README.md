@@ -25,8 +25,8 @@ fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.
 	year={2018}
 }
 ```
-#### For the data, an advanced version (more examples on fragments and IUs, rearrangement for some utterances) is being prepared. Might be released before 2019.
-* FR과 IU를 보강하고 일부 문장들을 재배열한 advanced version의 data를 준비 중이며, 2019년이 되기 전에는 release할 계획입니다. 코퍼스 변경 시 명시해 두도록 하겠습니다.
+### (18.11.22) [A final version of dataset](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt) and the new model is uploaded! 
+The next version will incoporate much more utterances and will be treated as a separate dataset.
 
 ## Contents (to be updated)
 [0. Corpus labelling](https://github.com/warnikchow/dlk2nlp/blob/master/README.md#0-corpus-labeling)</br>
@@ -61,7 +61,7 @@ where the [inter-annotator (IAA)](https://en.wikipedia.org/wiki/Cohen%27s_kappa)
 <p align="center">
     <image src="https://github.com/warnikchow/3i4k/blob/master/images/portion.PNG" width="400">
     
-* 태스크는 의도 분류로써, [3i4k](https://github.com/warnikchow/3i4k) 프로젝트를 위해 제작된 DB를 사용합니다. 사실 국책과제에 쓰려고 만든건데 어차피 논문으로도 submit했으니 공개는 상관 없지 않을까 싶어요. 5만 7천 문장쯤으로 아주 규모가 크지는 않지만, 일단 수작업으로 2만 문장 정도에서 0.85의 IAA를 얻었으며 (꽤 높은 agreement!), 4만 문장 가량이 더 수집/생성되어 그래도 어느정도 쓸만한 데이터셋이 만들어졌습니다. 
+* 태스크는 의도 분류로써, [3i4k](https://github.com/warnikchow/3i4k) 프로젝트를 위해 제작된 DB를 사용합니다. 사실 국책과제에 쓰려고 만든건데 어차피 논문으로도 submit했으니 공개는 상관 없지 않을까 싶어요. 6만 1천 문장쯤으로 아주 규모가 크지는 않지만, 일단 수작업으로 2만 문장 정도에서 0.85의 IAA를 얻었으며 (꽤 높은 agreement!), 4만 문장 가량이 더 수집/생성되어 그래도 어느정도 쓸만한 데이터셋이 만들어졌습니다. 
 
 * 레이블 7개는 위에 써 둔 것처럼, Statement~Rhetorical question까지의 clear한 의도 5가지와 (논문에선 clear-cut cases라고 칭했습니다만), 의도가 불분명한 Fragment (명사, 명사구, 혹은 불완전한 문장), 마지막으로 Intonation-dependent utterances *억양에 따라 의도가 달라지는 문형* 입니다. 마지막 레이블은 저 논문에서 하나의 레이블로 하기로 제안한 것이지만, 한국어 화자라면 어떤 문장들이 그런 성질을 가지는지 감이 올 것입니다. "뭐 먹고 싶어" "천천히 가고 있어" 같은 문장들이 그러한 유형이죠. Spoken language understanding에 아주 골머리를 썩이는 녀석들이기 때문에 따로 분류하기로 하였습니다. 
 
@@ -98,6 +98,7 @@ fci_label= [int(t[0]) for t in fci]
 > The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
 
 ```python
+import numpy as np
 import nltk
 from konlpy.tag import Twitter
 pos_tagger = Twitter()
@@ -235,28 +236,28 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 ```properties
 # CONSOLE RESULT
 >>> accuracy_score(uni_pred,fci_label_test)
-0.7785129723141215
->>> precision_recall_fscore_support(uni_pred,fci_label_test)
-(array([0.67030568, 0.89564732, 0.87613122, 0.75669291, 0.13414634,
-       0.21153846, 0.02673797]), array([0.69300226, 0.70798412, 0.86584684, 0.82277397, 0.61111111,
-       0.70967742, 0.55555556]), array([0.68146504, 0.79083518, 0.87095867, 0.78835111, 0.22      ,
-       0.32592593, 0.05102041]), array([ 443, 2267, 1789, 1168,   36,   31,    9]))
+0.7742409402546523
 >>> metrics.f1_score(uni_pred,fci_label_test,average="macro")
-0.5326509049311736
+0.6000194409152938
 >>> metrics.f1_score(uni_pred,fci_label_test,average="weighted")
-0.7996055049065471
-
+0.7880295802371478
+>>> precision_recall_fscore_support(uni_pred,fci_label_test)
+(array([0.74875208, 0.87206124, 0.88099174, 0.73828125, 0.14534884,
+       0.23148148, 0.32398754]), array([0.70754717, 0.71046771, 0.84513742, 0.82749562, 0.5952381 ,
+       0.80645161, 0.75362319]), array([0.72756669, 0.78301424, 0.8626922 , 0.78034682, 0.23364486,
+       0.35971223, 0.45315904]), array([ 636, 2245, 1892, 1142,   42,   31,  138]))
+       
 >>> accuracy_score(bi_pred,fci_label_test)
-0.3668814208601776
->>> precision_recall_fscore_support(bi_pred,fci_label_test)
-(array([0.75327511, 0.48158482, 0.36029412, 0.20551181, 0.        ,
-       0.        , 0.00534759]), array([0.2457265 , 0.37850877, 0.53983051, 0.30278422, 0.        ,
-       0.        , 1.        ]), array([0.37056928, 0.42387033, 0.43215739, 0.24484053, 0.        ,
-       0.        , 0.0106383 ]), array([1404, 2280, 1180,  862,    5,   11,    1]))
+0.321743388834476
 >>> metrics.f1_score(bi_pred,fci_label_test,average="macro")
-0.21172511891093732
+0.18947002986641723
 >>> metrics.f1_score(bi_pred,fci_label_test,average="weighted")
-0.38441799201505655
+0.35601345547363006
+>>> precision_recall_fscore_support(bi_pred,fci_label_test)
+(array([0.82529118, 0.46473483, 0.18787879, 0.22109375, 0.        ,
+       0.        , 0.00311526]), array([0.28101983, 0.36340316, 0.34236948, 0.28936605, 0.        ,
+       0.        , 0.05      ]), array([0.41927303, 0.40786948, 0.24261829, 0.2506643 , 0.        ,
+       0.        , 0.0058651 ]), array([1765, 2339,  996,  978,   12,   16,   20]))
 ```
 
 * 결과는 뜻밖이었는데요, bigram으로 구한 결과가 그다지 신통치 않은 것 같습니다. (코드를 잘못 짰나...?) 어쨌든 궁색하게 분석을 해보자면, 본 task가 sentiment analysis 처럼 단어 한두개로 문장의 의미가 크게 달라지는 task들과 다르게 전체적인 맥락 및 어순을 고려해야 하기도 하고, fair comparison을 위해 3,000으로 제한한 feature dimension이 오히려 bigram에는 해가 되어 정작 중요한 형태소들을 놓친 게 아닌가...하는 생각이 듭니다.
@@ -323,7 +324,6 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')
 > In the first few chapters, we've demonstrated how the corpus we've adopted is preprocessed, featurized, trained and predicted with the sparse sentence encodings. However, since we've obtained the dense word embeddings for the morphemes (as we've obtained for one-hot encoded words), it's plausible to extend it to the sentence vector, for instance by summation. 
 
 ```python
-import numpy as np
 from numpy import linalg as la
 
 def featurize_nn(corpus,wdim):
@@ -405,7 +405,7 @@ class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_
 
 > And the Below is the model construction and the evaluation phase. Note that the folder *tutorial* was created in the same directory to save the checkpoint models, recording F1 scores and the accuracy. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
 
-```properties
+```python
 def validate_nn(result,y,hidden_dim,cw,filename):
     model = Sequential()
     model.add(layers.Dense(hidden_dim, activation = 'relu', input_dim=len(result[0])))
@@ -418,131 +418,142 @@ def validate_nn(result,y,hidden_dim,cw,filename):
     model.fit(result,y,validation_split=0.1,epochs=30,batch_size=16,callbacks=callbacks_list,class_weight=cw)
 
 validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
+```
 
+```properties
+# CONSOLE RESULT
 >>> validate_nn(fci_nn,fci_label,128,class_weights_fci,'model/tutorial/nn')
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-dense_8 (Dense)              (None, 128)               12928     
+dense_3 (Dense)              (None, 128)               12928     
 _________________________________________________________________
-dense_9 (Dense)              (None, 7)                 903       
+dense_4 (Dense)              (None, 7)                 903       
 =================================================================
 Total params: 13,831
 Trainable params: 13,831
 Non-trainable params: 0
 _________________________________________________________________
-Train on 51684 samples, validate on 5743 samples
+Train on 55129 samples, validate on 6126 samples
 Epoch 1/30
-51568/51684 [============================>.] - ETA: 0s - loss: 0.8395 - acc: 0.7203— val_f1: 0.529105 — val_precision: 0.574037 — val_recall: 0.514271
-— val_f1_w: 0.728250 — val_precision_w: 0.717994 — val_recall_w: 0.746648
-51684/51684 [==============================] - 6s 125us/step - loss: 0.8396 - acc: 0.7202 - val_loss: 0.7489 - val_acc: 0.7466
+54960/55129 [============================>.] - ETA: 0s - loss: 0.8674 - acc: 0.7068— val_f1: 0.591953 — val_precision: 0.721290 — val_recall: 0.549977
+— val_f1_w: 0.731234 — val_precision_w: 0.747052 — val_recall_w: 0.742899
+55129/55129 [==============================] - 6s 116us/step - loss: 0.8672 - acc: 0.7069 - val_loss: 0.7665 - val_acc: 0.7429
 Epoch 2/30
-51344/51684 [============================>.] - ETA: 0s - loss: 0.7221 - acc: 0.7553— val_f1: 0.551772 — val_precision: 0.649961 — val_recall: 0.539155
-— val_f1_w: 0.738922 — val_precision_w: 0.742050 — val_recall_w: 0.755877
-51684/51684 [==============================] - 6s 119us/step - loss: 0.7218 - acc: 0.7552 - val_loss: 0.7044 - val_acc: 0.7559
+55056/55129 [============================>.] - ETA: 0s - loss: 0.7255 - acc: 0.7537— val_f1: 0.642565 — val_precision: 0.721759 — val_recall: 0.602373
+— val_f1_w: 0.754185 — val_precision_w: 0.761563 — val_recall_w: 0.760366
+55129/55129 [==============================] - 7s 119us/step - loss: 0.7253 - acc: 0.7537 - val_loss: 0.7111 - val_acc: 0.7604
 Epoch 3/30
-51344/51684 [============================>.] - ETA: 0s - loss: 0.6854 - acc: 0.7677— val_f1: 0.579180 — val_precision: 0.689582 — val_recall: 0.555189
-— val_f1_w: 0.759864 — val_precision_w: 0.768206 — val_recall_w: 0.774856
-51684/51684 [==============================] - 6s 121us/step - loss: 0.6856 - acc: 0.7676 - val_loss: 0.6680 - val_acc: 0.7749
+54992/55129 [============================>.] - ETA: 0s - loss: 0.6856 - acc: 0.7660— val_f1: 0.650076 — val_precision: 0.731066 — val_recall: 0.608824
+— val_f1_w: 0.760444 — val_precision_w: 0.769572 — val_recall_w: 0.766569
+55129/55129 [==============================] - 7s 119us/step - loss: 0.6856 - acc: 0.7660 - val_loss: 0.6827 - val_acc: 0.7666
 Epoch 4/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.6590 - acc: 0.7778— val_f1: 0.578035 — val_precision: 0.707392 — val_recall: 0.548753
-— val_f1_w: 0.759995 — val_precision_w: 0.768224 — val_recall_w: 0.776423
-51684/51684 [==============================] - 6s 121us/step - loss: 0.6590 - acc: 0.7778 - val_loss: 0.6499 - val_acc: 0.7764
+54704/55129 [============================>.] - ETA: 0s - loss: 0.6587 - acc: 0.7760— val_f1: 0.665685 — val_precision: 0.750019 — val_recall: 0.625693
+— val_f1_w: 0.768111 — val_precision_w: 0.777307 — val_recall_w: 0.773914
+55129/55129 [==============================] - 7s 119us/step - loss: 0.6585 - acc: 0.7761 - val_loss: 0.6611 - val_acc: 0.7739
 Epoch 5/30
-51664/51684 [============================>.] - ETA: 0s - loss: 0.6376 - acc: 0.7843— val_f1: 0.604010 — val_precision: 0.704348 — val_recall: 0.579958
-— val_f1_w: 0.773616 — val_precision_w: 0.779264 — val_recall_w: 0.787393
-51684/51684 [==============================] - 6s 120us/step - loss: 0.6375 - acc: 0.7843 - val_loss: 0.6299 - val_acc: 0.7874
+54912/55129 [============================>.] - ETA: 0s - loss: 0.6361 - acc: 0.7839— val_f1: 0.675093 — val_precision: 0.756560 — val_recall: 0.633105
+— val_f1_w: 0.772584 — val_precision_w: 0.779329 — val_recall_w: 0.779465
+55129/55129 [==============================] - 6s 117us/step - loss: 0.6363 - acc: 0.7838 - val_loss: 0.6531 - val_acc: 0.7795
 Epoch 6/30
-51600/51684 [============================>.] - ETA: 0s - loss: 0.6201 - acc: 0.7918— val_f1: 0.601519 — val_precision: 0.725732 — val_recall: 0.572787
-— val_f1_w: 0.779200 — val_precision_w: 0.788667 — val_recall_w: 0.794184
-51684/51684 [==============================] - 6s 121us/step - loss: 0.6199 - acc: 0.7919 - val_loss: 0.6151 - val_acc: 0.7942
+54752/55129 [============================>.] - ETA: 0s - loss: 0.6175 - acc: 0.7909— val_f1: 0.677678 — val_precision: 0.760474 — val_recall: 0.638087
+— val_f1_w: 0.782750 — val_precision_w: 0.789371 — val_recall_w: 0.788116
+55129/55129 [==============================] - 6s 116us/step - loss: 0.6178 - acc: 0.7908 - val_loss: 0.6286 - val_acc: 0.7881
 Epoch 7/30
-51296/51684 [============================>.] - ETA: 0s - loss: 0.6050 - acc: 0.7957— val_f1: 0.614793 — val_precision: 0.710008 — val_recall: 0.585230
-— val_f1_w: 0.783822 — val_precision_w: 0.786432 — val_recall_w: 0.796622
-51684/51684 [==============================] - 6s 122us/step - loss: 0.6051 - acc: 0.7957 - val_loss: 0.6045 - val_acc: 0.7966
+55056/55129 [============================>.] - ETA: 0s - loss: 0.6018 - acc: 0.7958— val_f1: 0.698941 — val_precision: 0.753141 — val_recall: 0.667789
+— val_f1_w: 0.790828 — val_precision_w: 0.793462 — val_recall_w: 0.795462
+55129/55129 [==============================] - 6s 117us/step - loss: 0.6021 - acc: 0.7957 - val_loss: 0.6192 - val_acc: 0.7955
 Epoch 8/30
-51360/51684 [============================>.] - ETA: 0s - loss: 0.5917 - acc: 0.8013— val_f1: 0.620563 — val_precision: 0.726211 — val_recall: 0.588463
-— val_f1_w: 0.790249 — val_precision_w: 0.797681 — val_recall_w: 0.803239
-51684/51684 [==============================] - 6s 121us/step - loss: 0.5916 - acc: 0.8013 - val_loss: 0.5926 - val_acc: 0.8032
+54736/55129 [============================>.] - ETA: 0s - loss: 0.5884 - acc: 0.8009— val_f1: 0.699604 — val_precision: 0.766330 — val_recall: 0.662288
+— val_f1_w: 0.794905 — val_precision_w: 0.797012 — val_recall_w: 0.800033
+55129/55129 [==============================] - 7s 120us/step - loss: 0.5887 - acc: 0.8008 - val_loss: 0.6067 - val_acc: 0.8000
 Epoch 9/30
-51568/51684 [============================>.] - ETA: 0s - loss: 0.5803 - acc: 0.8052— val_f1: 0.614362 — val_precision: 0.755863 — val_recall: 0.581659
-— val_f1_w: 0.787776 — val_precision_w: 0.808819 — val_recall_w: 0.800104
-51684/51684 [==============================] - 6s 120us/step - loss: 0.5801 - acc: 0.8052 - val_loss: 0.5963 - val_acc: 0.8001
+54880/55129 [============================>.] - ETA: 0s - loss: 0.5753 - acc: 0.8059— val_f1: 0.703015 — val_precision: 0.768262 — val_recall: 0.665053
+— val_f1_w: 0.800541 — val_precision_w: 0.807472 — val_recall_w: 0.804114
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5758 - acc: 0.8057 - val_loss: 0.5961 - val_acc: 0.8041
 Epoch 10/30
-51440/51684 [============================>.] - ETA: 0s - loss: 0.5694 - acc: 0.8096— val_f1: 0.630415 — val_precision: 0.731874 — val_recall: 0.597364
-— val_f1_w: 0.797703 — val_precision_w: 0.804632 — val_recall_w: 0.808985
-51684/51684 [==============================] - 6s 117us/step - loss: 0.5696 - acc: 0.8095 - val_loss: 0.5745 - val_acc: 0.8090
+55040/55129 [============================>.] - ETA: 0s - loss: 0.5649 - acc: 0.8090— val_f1: 0.707821 — val_precision: 0.784078 — val_recall: 0.666537
+— val_f1_w: 0.804109 — val_precision_w: 0.811529 — val_recall_w: 0.809011
+55129/55129 [==============================] - 6s 116us/step - loss: 0.5646 - acc: 0.8091 - val_loss: 0.5840 - val_acc: 0.8090
 Epoch 11/30
-51552/51684 [============================>.] - ETA: 0s - loss: 0.5602 - acc: 0.8131— val_f1: 0.647759 — val_precision: 0.721144 — val_recall: 0.614857
-— val_f1_w: 0.801638 — val_precision_w: 0.806856 — val_recall_w: 0.810030
-51684/51684 [==============================] - 6s 122us/step - loss: 0.5599 - acc: 0.8132 - val_loss: 0.5724 - val_acc: 0.8100
+55056/55129 [============================>.] - ETA: 0s - loss: 0.5552 - acc: 0.8127— val_f1: 0.711974 — val_precision: 0.784070 — val_recall: 0.671254
+— val_f1_w: 0.809180 — val_precision_w: 0.819130 — val_recall_w: 0.813092
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5550 - acc: 0.8128 - val_loss: 0.5850 - val_acc: 0.8131
 Epoch 12/30
-51488/51684 [============================>.] - ETA: 0s - loss: 0.5504 - acc: 0.8164— val_f1: 0.649932 — val_precision: 0.721899 — val_recall: 0.617662
-— val_f1_w: 0.804792 — val_precision_w: 0.806620 — val_recall_w: 0.813164
-51684/51684 [==============================] - 6s 122us/step - loss: 0.5508 - acc: 0.8162 - val_loss: 0.5684 - val_acc: 0.8132
+55008/55129 [============================>.] - ETA: 0s - loss: 0.5454 - acc: 0.8167— val_f1: 0.714970 — val_precision: 0.773000 — val_recall: 0.679629
+— val_f1_w: 0.807968 — val_precision_w: 0.811567 — val_recall_w: 0.810970
+55129/55129 [==============================] - 7s 119us/step - loss: 0.5459 - acc: 0.8165 - val_loss: 0.5757 - val_acc: 0.8110
 Epoch 13/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.5428 - acc: 0.8187— val_f1: 0.630203 — val_precision: 0.752922 — val_recall: 0.597303
-— val_f1_w: 0.799447 — val_precision_w: 0.808868 — val_recall_w: 0.811771
-51684/51684 [==============================] - 6s 122us/step - loss: 0.5429 - acc: 0.8187 - val_loss: 0.5601 - val_acc: 0.8118
+54880/55129 [============================>.] - ETA: 0s - loss: 0.5371 - acc: 0.8196— val_f1: 0.708290 — val_precision: 0.802882 — val_recall: 0.662145
+— val_f1_w: 0.808888 — val_precision_w: 0.817245 — val_recall_w: 0.814887
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5369 - acc: 0.8196 - val_loss: 0.5711 - val_acc: 0.8149
 Epoch 14/30
-51568/51684 [============================>.] - ETA: 0s - loss: 0.5362 - acc: 0.8222— val_f1: 0.644598 — val_precision: 0.750094 — val_recall: 0.609115
-— val_f1_w: 0.805831 — val_precision_w: 0.814307 — val_recall_w: 0.816820
-51684/51684 [==============================] - 6s 122us/step - loss: 0.5360 - acc: 0.8223 - val_loss: 0.5551 - val_acc: 0.8168
+55008/55129 [============================>.] - ETA: 0s - loss: 0.5295 - acc: 0.8216— val_f1: 0.720639 — val_precision: 0.784796 — val_recall: 0.684186
+— val_f1_w: 0.813487 — val_precision_w: 0.820760 — val_recall_w: 0.816520
+55129/55129 [==============================] - 7s 119us/step - loss: 0.5294 - acc: 0.8216 - val_loss: 0.5735 - val_acc: 0.8165
 Epoch 15/30
-51392/51684 [============================>.] - ETA: 0s - loss: 0.5291 - acc: 0.8226— val_f1: 0.648176 — val_precision: 0.743461 — val_recall: 0.611869
-— val_f1_w: 0.807041 — val_precision_w: 0.814813 — val_recall_w: 0.816298
-51684/51684 [==============================] - 6s 122us/step - loss: 0.5288 - acc: 0.8227 - val_loss: 0.5520 - val_acc: 0.8163
+55120/55129 [============================>.] - ETA: 0s - loss: 0.5218 - acc: 0.8245— val_f1: 0.723226 — val_precision: 0.793214 — val_recall: 0.682388
+— val_f1_w: 0.813296 — val_precision_w: 0.821299 — val_recall_w: 0.817009
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5217 - acc: 0.8246 - val_loss: 0.5625 - val_acc: 0.8170
 Epoch 16/30
-51488/51684 [============================>.] - ETA: 0s - loss: 0.5224 - acc: 0.8261— val_f1: 0.649435 — val_precision: 0.740358 — val_recall: 0.612228
-— val_f1_w: 0.806029 — val_precision_w: 0.813032 — val_recall_w: 0.815776
-51684/51684 [==============================] - 6s 123us/step - loss: 0.5221 - acc: 0.8262 - val_loss: 0.5482 - val_acc: 0.8158
+54784/55129 [============================>.] - ETA: 0s - loss: 0.5147 - acc: 0.8259— val_f1: 0.718378 — val_precision: 0.805836 — val_recall: 0.671866
+— val_f1_w: 0.812241 — val_precision_w: 0.821222 — val_recall_w: 0.817009
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5150 - acc: 0.8259 - val_loss: 0.5591 - val_acc: 0.8170
 Epoch 17/30
-51472/51684 [============================>.] - ETA: 0s - loss: 0.5163 - acc: 0.8290— val_f1: 0.653423 — val_precision: 0.753656 — val_recall: 0.614267
-— val_f1_w: 0.811074 — val_precision_w: 0.817580 — val_recall_w: 0.820651
-51684/51684 [==============================] - 6s 120us/step - loss: 0.5163 - acc: 0.8291 - val_loss: 0.5456 - val_acc: 0.8207
+55056/55129 [============================>.] - ETA: 0s - loss: 0.5085 - acc: 0.8286— val_f1: 0.710259 — val_precision: 0.800253 — val_recall: 0.667554
+— val_f1_w: 0.811823 — val_precision_w: 0.817403 — val_recall_w: 0.818642
+55129/55129 [==============================] - 7s 118us/step - loss: 0.5087 - acc: 0.8285 - val_loss: 0.5605 - val_acc: 0.8186
 Epoch 18/30
-51584/51684 [============================>.] - ETA: 0s - loss: 0.5106 - acc: 0.8299— val_f1: 0.654337 — val_precision: 0.747464 — val_recall: 0.621937
-— val_f1_w: 0.811604 — val_precision_w: 0.817200 — val_recall_w: 0.821348
-51684/51684 [==============================] - 6s 120us/step - loss: 0.5106 - acc: 0.8299 - val_loss: 0.5420 - val_acc: 0.8213
+54704/55129 [============================>.] - ETA: 0s - loss: 0.5026 - acc: 0.8304— val_f1: 0.719479 — val_precision: 0.797672 — val_recall: 0.676889
+— val_f1_w: 0.816203 — val_precision_w: 0.823536 — val_recall_w: 0.820764
+55129/55129 [==============================] - 7s 119us/step - loss: 0.5029 - acc: 0.8303 - val_loss: 0.5533 - val_acc: 0.8208
 Epoch 19/30
-51408/51684 [============================>.] - ETA: 0s - loss: 0.5053 - acc: 0.8319— val_f1: 0.647264 — val_precision: 0.752377 — val_recall: 0.609879
-— val_f1_w: 0.800680 — val_precision_w: 0.805022 — val_recall_w: 0.811248
-51684/51684 [==============================] - 6s 118us/step - loss: 0.5053 - acc: 0.8319 - val_loss: 0.5506 - val_acc: 0.8112
+54784/55129 [============================>.] - ETA: 0s - loss: 0.4975 - acc: 0.8326— val_f1: 0.718767 — val_precision: 0.790945 — val_recall: 0.677815
+— val_f1_w: 0.815264 — val_precision_w: 0.819433 — val_recall_w: 0.820601
+55129/55129 [==============================] - 6s 118us/step - loss: 0.4972 - acc: 0.8328 - val_loss: 0.5533 - val_acc: 0.8206
 Epoch 20/30
-51328/51684 [============================>.] - ETA: 0s - loss: 0.4988 - acc: 0.8343— val_f1: 0.671217 — val_precision: 0.737495 — val_recall: 0.640099
-— val_f1_w: 0.814082 — val_precision_w: 0.817465 — val_recall_w: 0.821174
-51684/51684 [==============================] - 6s 117us/step - loss: 0.4997 - acc: 0.8341 - val_loss: 0.5360 - val_acc: 0.8212
+54704/55129 [============================>.] - ETA: 0s - loss: 0.4914 - acc: 0.8341— val_f1: 0.732335 — val_precision: 0.777586 — val_recall: 0.702288
+— val_f1_w: 0.817729 — val_precision_w: 0.819907 — val_recall_w: 0.820927
+55129/55129 [==============================] - 6s 118us/step - loss: 0.4915 - acc: 0.8340 - val_loss: 0.5515 - val_acc: 0.8209
 Epoch 21/30
-51264/51684 [============================>.] - ETA: 0s - loss: 0.4944 - acc: 0.8366— val_f1: 0.664458 — val_precision: 0.740520 — val_recall: 0.632045
-— val_f1_w: 0.812932 — val_precision_w: 0.817124 — val_recall_w: 0.821696
-51684/51684 [==============================] - 6s 120us/step - loss: 0.4946 - acc: 0.8366 - val_loss: 0.5365 - val_acc: 0.8217
+54832/55129 [============================>.] - ETA: 0s - loss: 0.4868 - acc: 0.8365— val_f1: 0.730587 — val_precision: 0.787088 — val_recall: 0.694430
+— val_f1_w: 0.816936 — val_precision_w: 0.820749 — val_recall_w: 0.819948
+55129/55129 [==============================] - 7s 118us/step - loss: 0.4865 - acc: 0.8365 - val_loss: 0.5466 - val_acc: 0.8199
 Epoch 22/30
-51392/51684 [============================>.] - ETA: 0s - loss: 0.4904 - acc: 0.8366— val_f1: 0.652959 — val_precision: 0.728956 — val_recall: 0.616198
-— val_f1_w: 0.808515 — val_precision_w: 0.812157 — val_recall_w: 0.817517
-51684/51684 [==============================] - 6s 121us/step - loss: 0.4905 - acc: 0.8366 - val_loss: 0.5426 - val_acc: 0.8175
+55120/55129 [============================>.] - ETA: 0s - loss: 0.4820 - acc: 0.8377— val_f1: 0.729099 — val_precision: 0.795526 — val_recall: 0.689722
+— val_f1_w: 0.820917 — val_precision_w: 0.825831 — val_recall_w: 0.825171
+55129/55129 [==============================] - 6s 117us/step - loss: 0.4821 - acc: 0.8377 - val_loss: 0.5439 - val_acc: 0.8252
 Epoch 23/30
-51312/51684 [============================>.] - ETA: 0s - loss: 0.4854 - acc: 0.8395— val_f1: 0.683792 — val_precision: 0.733536 — val_recall: 0.653159
-— val_f1_w: 0.818489 — val_precision_w: 0.819629 — val_recall_w: 0.823263
-51684/51684 [==============================] - 6s 122us/step - loss: 0.4857 - acc: 0.8395 - val_loss: 0.5363 - val_acc: 0.8233
+54960/55129 [============================>.] - ETA: 0s - loss: 0.4769 - acc: 0.8401— val_f1: 0.728253 — val_precision: 0.777373 — val_recall: 0.697222
+— val_f1_w: 0.816949 — val_precision_w: 0.818159 — val_recall_w: 0.820764
+55129/55129 [==============================] - 7s 120us/step - loss: 0.4770 - acc: 0.8399 - val_loss: 0.5483 - val_acc: 0.8208
 Epoch 24/30
-51264/51684 [============================>.] - ETA: 0s - loss: 0.4815 - acc: 0.8404— val_f1: 0.670460 — val_precision: 0.751412 — val_recall: 0.632046
-— val_f1_w: 0.814917 — val_precision_w: 0.816401 — val_recall_w: 0.823263
-51684/51684 [==============================] - 6s 119us/step - loss: 0.4813 - acc: 0.8403 - val_loss: 0.5349 - val_acc: 0.8233
+54880/55129 [============================>.] - ETA: 0s - loss: 0.4726 - acc: 0.8416— val_f1: 0.737025 — val_precision: 0.785367 — val_recall: 0.705383
+— val_f1_w: 0.822261 — val_precision_w: 0.824854 — val_recall_w: 0.825661
+55129/55129 [==============================] - 7s 122us/step - loss: 0.4725 - acc: 0.8416 - val_loss: 0.5429 - val_acc: 0.8257
 Epoch 25/30
-51456/51684 [============================>.] - ETA: 0s - loss: 0.4778 - acc: 0.8422— val_f1: 0.660602 — val_precision: 0.767336 — val_recall: 0.616146
-— val_f1_w: 0.817814 — val_precision_w: 0.826908 — val_recall_w: 0.827442
-51684/51684 [==============================] - 6s 121us/step - loss: 0.4774 - acc: 0.8423 - val_loss: 0.5352 - val_acc: 0.8274
+54736/55129 [============================>.] - ETA: 0s - loss: 0.4682 - acc: 0.8432— val_f1: 0.729383 — val_precision: 0.774703 — val_recall: 0.698946
+— val_f1_w: 0.819586 — val_precision_w: 0.823633 — val_recall_w: 0.821580
+55129/55129 [==============================] - 6s 117us/step - loss: 0.4684 - acc: 0.8430 - val_loss: 0.5506 - val_acc: 0.8216
 Epoch 26/30
-51360/51684 [============================>.] - ETA: 0s - loss: 0.4739 - acc: 0.8426— val_f1: 0.665963 — val_precision: 0.774288 — val_recall: 0.624489
-— val_f1_w: 0.818409 — val_precision_w: 0.826185 — val_recall_w: 0.827442
-51684/51684 [==============================] - 6s 118us/step - loss: 0.4736 - acc: 0.8427 - val_loss: 0.5307 - val_acc: 0.8274
+54928/55129 [============================>.] - ETA: 0s - loss: 0.4644 - acc: 0.8430— val_f1: 0.719513 — val_precision: 0.784795 — val_recall: 0.681772
+— val_f1_w: 0.816008 — val_precision_w: 0.819116 — val_recall_w: 0.820601
+55129/55129 [==============================] - 6s 117us/step - loss: 0.4645 - acc: 0.8429 - val_loss: 0.5515 - val_acc: 0.8206
 Epoch 27/30
-51296/51684 [============================>.] - ETA: 0s - loss: 0.4697 - acc: 0.8438— val_f1: 0.683299 — val_precision: 0.737117 — val_recall: 0.652833
-— val_f1_w: 0.822906 — val_precision_w: 0.823076 — val_recall_w: 0.828661
-51684/51684 [==============================] - 6s 120us/step - loss: 0.4698 - acc: 0.8437 - val_loss: 0.5255 - val_acc: 0.8287
+54864/55129 [============================>.] - ETA: 0s - loss: 0.4604 - acc: 0.8444— val_f1: 0.739462 — val_precision: 0.782457 — val_recall: 0.710235
+— val_f1_w: 0.823328 — val_precision_w: 0.825483 — val_recall_w: 0.826641
+55129/55129 [==============================] - 7s 119us/step - loss: 0.4607 - acc: 0.8443 - val_loss: 0.5390 - val_acc: 0.8266
+Epoch 28/30
+54912/55129 [============================>.] - ETA: 0s - loss: 0.4567 - acc: 0.8456— val_f1: 0.726324 — val_precision: 0.789678 — val_recall: 0.689405
+— val_f1_w: 0.821804 — val_precision_w: 0.826340 — val_recall_w: 0.825171
+55129/55129 [==============================] - 6s 116us/step - loss: 0.4569 - acc: 0.8455 - val_loss: 0.5420 - val_acc: 0.8252
+Epoch 29/30
+54752/55129 [============================>.] - ETA: 0s - loss: 0.4533 - acc: 0.8479— val_f1: 0.735079 — val_precision: 0.787528 — val_recall: 0.700854
+— val_f1_w: 0.824626 — val_precision_w: 0.828260 — val_recall_w: 0.828273
+55129/55129 [==============================] - 6s 115us/step - loss: 0.4529 - acc: 0.8479 - val_loss: 0.5414 - val_acc: 0.8283
 ```
 
-* 모델 construction과 training-evaluation입니다. 매 checkpoint에서 모델들이 tutorial이라는 폴더에 저장되어야 하니, 미리 만들어 두어야겠죠 ㅎㅎ TF-IDF의 결과들이 그렇게 만족스럽지는 못했다는 걸 생각하면, 괄목할 만한 성장입니다. accuracy도 올랐고, F1의 평균값 (val_f1)도 상당한 수준으로 상승했네요. one-hot vector을 만들 때 그랬던 것처럼 그냥 구성요소들을 더했을 뿐인데 ...?
+* 모델 construction과 (최고 performance를 보이는 지점까지의) training-evaluation 입니다. 매 checkpoint에서 모델들이 tutorial이라는 폴더에 저장되어야 하니, 미리 만들어 두어야겠죠 ㅎㅎ TF-IDF의 결과들이 그렇게 만족스럽지는 못했다는 걸 생각하면, 괄목할 만한 성장입니다. accuracy도 올랐고, F1의 평균값 (val_f1)도 상당한 수준으로 상승했네요. one-hot vector을 만들 때 그랬던 것처럼 그냥 구성요소들을 더했을 뿐인데 ...?
 
 * 겨우 100차원인 벡터들을 더해서 뭘 표현할 수 있을까? 싶은 분들도 분명 계실 겁니다. 하지만, 두 가지를 상기할 필요가 있습니다. (1) word vector들은 one-hot vector들처럼 equivalent하지 않고, 특정 기준에 의해 training되었다 - 즉 그 자체로 어떤 의미를 지니고 있다. (2) 벡터들의 합으로 얻는 벡터 역시 100dim 공간에 표현될 수 있으며, 100dim은 그 방향만 해도 2^100 개 이상을 나타낼 수 있을 정도로 꽤나 많은 것을 표현할 수 있다.
 
@@ -638,42 +649,50 @@ conv2d_2 (Conv2D)            (None, 12, 1, 32)         3104
 _________________________________________________________________
 flatten_1 (Flatten)          (None, 384)               0         
 _________________________________________________________________
-dense_1 (Dense)              (None, 128)               49280     
+dense_5 (Dense)              (None, 128)               49280     
 _________________________________________________________________
-dense_2 (Dense)              (None, 7)                 903       
+dense_6 (Dense)              (None, 7)                 903       
 =================================================================
 Total params: 62,919
 Trainable params: 62,919
 Non-trainable params: 0
 _________________________________________________________________
-Train on 51684 samples, validate on 5743 samples
+Train on 55129 samples, validate on 6126 samples
 Epoch 1/30
-51600/51684 [============================>.] - ETA: 0s - loss: 0.6353 - acc: 0.7863— val_f1: 0.577525 — val_precision: 0.721343 — val_recall: 0.562436
-— val_f1_w: 0.811520 — val_precision_w: 0.814879 — val_recall_w: 0.832666
-51684/51684 [==============================] - 19s 377us/step - loss: 0.6350 - acc: 0.7864 - val_loss: 0.4987 - val_acc: 0.8327
+54992/55129 [============================>.] - ETA: 0s - loss: 0.5817 - acc: 0.8026— val_f1: 0.715119 — val_precision: 0.766993 — val_recall: 0.687496
+— val_f1_w: 0.836404 — val_precision_w: 0.840650 — val_recall_w: 0.842148
+55129/55129 [==============================] - 21s 375us/step - loss: 0.5816 - acc: 0.8027 - val_loss: 0.4907 - val_acc: 0.8421
 Epoch 2/30
-51616/51684 [============================>.] - ETA: 0s - loss: 0.4569 - acc: 0.8482— val_f1: 0.661298 — val_precision: 0.704766 — val_recall: 0.644935
-— val_f1_w: 0.829482 — val_precision_w: 0.832600 — val_recall_w: 0.836148
-51684/51684 [==============================] - 19s 375us/step - loss: 0.4569 - acc: 0.8482 - val_loss: 0.4827 - val_acc: 0.8361
+54992/55129 [============================>.] - ETA: 0s - loss: 0.4391 - acc: 0.8505— val_f1: 0.748518 — val_precision: 0.785899 — val_recall: 0.724397
+— val_f1_w: 0.850521 — val_precision_w: 0.852202 — val_recall_w: 0.853901
+55129/55129 [==============================] - 21s 376us/step - loss: 0.4389 - acc: 0.8506 - val_loss: 0.4531 - val_acc: 0.8539
 Epoch 3/30
-51568/51684 [============================>.] - ETA: 0s - loss: 0.4069 - acc: 0.8628— val_f1: 0.685981 — val_precision: 0.711728 — val_recall: 0.674920
-— val_f1_w: 0.837491 — val_precision_w: 0.840673 — val_recall_w: 0.840327
-51684/51684 [==============================] - 19s 373us/step - loss: 0.4067 - acc: 0.8628 - val_loss: 0.4642 - val_acc: 0.8403
+54992/55129 [============================>.] - ETA: 0s - loss: 0.3934 - acc: 0.8667— val_f1: 0.755061 — val_precision: 0.791092 — val_recall: 0.731512
+— val_f1_w: 0.855977 — val_precision_w: 0.857298 — val_recall_w: 0.859288
+55129/55129 [==============================] - 20s 371us/step - loss: 0.3936 - acc: 0.8667 - val_loss: 0.4413 - val_acc: 0.8593
 Epoch 4/30
-51568/51684 [============================>.] - ETA: 0s - loss: 0.3732 - acc: 0.8734— val_f1: 0.694238 — val_precision: 0.743687 — val_recall: 0.666121
-— val_f1_w: 0.849517 — val_precision_w: 0.848548 — val_recall_w: 0.854954
-51684/51684 [==============================] - 19s 377us/step - loss: 0.3732 - acc: 0.8734 - val_loss: 0.4362 - val_acc: 0.8550
+54992/55129 [============================>.] - ETA: 0s - loss: 0.3640 - acc: 0.8753— val_f1: 0.762634 — val_precision: 0.783417 — val_recall: 0.755429
+— val_f1_w: 0.853230 — val_precision_w: 0.858127 — val_recall_w: 0.856024
+55129/55129 [==============================] - 21s 374us/step - loss: 0.3640 - acc: 0.8753 - val_loss: 0.4558 - val_acc: 0.8560
 Epoch 5/30
-51616/51684 [============================>.] - ETA: 0s - loss: 0.3467 - acc: 0.8810— val_f1: 0.700670 — val_precision: 0.759441 — val_recall: 0.668912
-— val_f1_w: 0.850824 — val_precision_w: 0.851885 — val_recall_w: 0.858262
-51684/51684 [==============================] - 19s 375us/step - loss: 0.3469 - acc: 0.8809 - val_loss: 0.4275 - val_acc: 0.8583
+54992/55129 [============================>.] - ETA: 0s - loss: 0.3402 - acc: 0.8824— val_f1: 0.756524 — val_precision: 0.798401 — val_recall: 0.728596
+— val_f1_w: 0.857324 — val_precision_w: 0.857582 — val_recall_w: 0.860431
+55129/55129 [==============================] - 20s 370us/step - loss: 0.3403 - acc: 0.8824 - val_loss: 0.4348 - val_acc: 0.8604
 Epoch 6/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.3264 - acc: 0.8880— val_f1: 0.698527 — val_precision: 0.748593 — val_recall: 0.678563
-— val_f1_w: 0.853043 — val_precision_w: 0.852584 — val_recall_w: 0.860700
-51684/51684 [==============================] - 19s 371us/step - loss: 0.3264 - acc: 0.8880 - val_loss: 0.4331 - val_acc: 0.8607
+55024/55129 [============================>.] - ETA: 0s - loss: 0.3210 - acc: 0.8910— val_f1: 0.761926 — val_precision: 0.782188 — val_recall: 0.748026
+— val_f1_w: 0.856406 — val_precision_w: 0.857747 — val_recall_w: 0.858146
+55129/55129 [==============================] - 21s 374us/step - loss: 0.3209 - acc: 0.8910 - val_loss: 0.4406 - val_acc: 0.8581
+Epoch 7/30
+55040/55129 [============================>.] - ETA: 0s - loss: 0.3051 - acc: 0.8947— val_f1: 0.758700 — val_precision: 0.784020 — val_recall: 0.740566
+— val_f1_w: 0.850813 — val_precision_w: 0.850469 — val_recall_w: 0.853575
+55129/55129 [==============================] - 21s 373us/step - loss: 0.3051 - acc: 0.8947 - val_loss: 0.4540 - val_acc: 0.8536
+Epoch 8/30
+55088/55129 [============================>.] - ETA: 0s - loss: 0.2900 - acc: 0.9003— val_f1: 0.764175 — val_precision: 0.814364 — val_recall: 0.732869
+— val_f1_w: 0.861861 — val_precision_w: 0.865253 — val_recall_w: 0.865491
+55129/55129 [==============================] - 21s 373us/step - loss: 0.2899 - acc: 0.9004 - val_loss: 0.4441 - val_acc: 0.8655
 ```
 
-* 결과입니다. F1 score에서는 그렇게 큰 향상을 얻지는 못했으나, accuracy는 0.8287에서 0.8607로, error rate가 약 17%에서 14%로 감소하며 약 20%의 에러율 감소 (RRER)을 보였습니다. 아무래도 distributional한 information을 반영하는 것이, 단순히 existence를 체크하는 것보다는 더 정확하겠죠.
+* 결과입니다. F1 score에서는 그렇게 큰 향상을 얻지는 못했으나, accuracy는 0.8283에서 0.8655로, error rate가 약 17%에서 14%로 감소하며 약 20%의 에러율 감소 (RRER)을 보였습니다. 아무래도 distributional한 information을 반영하는 것이, 단순히 existence를 체크하는 것보다는 더 정확하겠죠.
 
 * 이상으로 distributional information의 가장 효과적인 summarizer 중 하나에 대하여 살펴봤습니다. 하지만 그 단점은, non-consecutive한 성분들 간의 상관관계를 설명하기 쉽지 않다는 점이죠. 다음 편부터 설명되는 rnn은 그러한 점들을 보완합니다.
 
@@ -733,74 +752,85 @@ validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 
 ```properties
 # CONSOLE RESULT
->>> validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
+>>> validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,0.1,16,'model/tutorial/rec')
 _________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
-bidirectional_2 (Bidirection (None, 64)                34048     
+bidirectional_1 (Bidirection (None, 64)                34048     
 _________________________________________________________________
-dense_4 (Dense)              (None, 128)               8320      
+dense_7 (Dense)              (None, 128)               8320      
 _________________________________________________________________
-dense_5 (Dense)              (None, 7)                 903       
+dense_8 (Dense)              (None, 7)                 903       
 =================================================================
 Total params: 43,271
 Trainable params: 43,271
 Non-trainable params: 0
 _________________________________________________________________
-
-Train on 51684 samples, validate on 5743 samples
-Epoch 1/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.5610 - acc: 0.8128— val_f1: 0.671337 — val_precision: 0.721156 — val_recall: 0.648963
-— val_f1_w: 0.836127 — val_precision_w: 0.835080 — val_recall_w: 0.843287
-51684/51684 [==============================] - 81s 2ms/step - loss: 0.5610 - acc: 0.8128 - val_loss: 0.4706 - val_acc: 0.8433
-Epoch 2/30
-51664/51684 [============================>.] - ETA: 0s - loss: 0.4385 - acc: 0.8521— val_f1: 0.692261 — val_precision: 0.739367 — val_recall: 0.666227
-— val_f1_w: 0.846166 — val_precision_w: 0.844998 — val_recall_w: 0.851820
-51684/51684 [==============================] - 79s 2ms/step - loss: 0.4385 - acc: 0.8521 - val_loss: 0.4329 - val_acc: 0.8518
-Epoch 3/30
-51664/51684 [============================>.] - ETA: 0s - loss: 0.3994 - acc: 0.8634— val_f1: 0.697970 — val_precision: 0.777117 — val_recall: 0.659569
-— val_f1_w: 0.852976 — val_precision_w: 0.854659 — val_recall_w: 0.861048
-51684/51684 [==============================] - 80s 2ms/step - loss: 0.3994 - acc: 0.8635 - val_loss: 0.4148 - val_acc: 0.8610
-Epoch 4/30
-51648/51684 [============================>.] - ETA: 0s - loss: 0.3715 - acc: 0.8731— val_f1: 0.726711 — val_precision: 0.769367 — val_recall: 0.700206
-— val_f1_w: 0.861842 — val_precision_w: 0.861756 — val_recall_w: 0.865575
-51684/51684 [==============================] - 79s 2ms/step - loss: 0.3717 - acc: 0.8729 - val_loss: 0.4016 - val_acc: 0.8656
-Epoch 5/30
-51648/51684 [============================>.] - ETA: 0s - loss: 0.3510 - acc: 0.8804— val_f1: 0.732919 — val_precision: 0.756133 — val_recall: 0.714735
-— val_f1_w: 0.865283 — val_precision_w: 0.864796 — val_recall_w: 0.868187
-51684/51684 [==============================] - 79s 2ms/step - loss: 0.3511 - acc: 0.8804 - val_loss: 0.3880 - val_acc: 0.8682
-Epoch 6/30
-51664/51684 [============================>.] - ETA: 0s - loss: 0.3333 - acc: 0.8867— val_f1: 0.744263 — val_precision: 0.742123 — val_recall: 0.752202
-— val_f1_w: 0.866932 — val_precision_w: 0.871576 — val_recall_w: 0.863660
-51684/51684 [==============================] - 79s 2ms/step - loss: 0.3333 - acc: 0.8867 - val_loss: 0.3944 - val_acc: 0.8637
-Epoch 7/30
-51664/51684 [============================>.] - ETA: 0s - loss: 0.3170 - acc: 0.8913— val_f1: 0.729010 — val_precision: 0.774354 — val_recall: 0.700533
-— val_f1_w: 0.865218 — val_precision_w: 0.863544 — val_recall_w: 0.870625
-51684/51684 [==============================] - 80s 2ms/step - loss: 0.3169 - acc: 0.8914 - val_loss: 0.3909 - val_acc: 0.8706
-Epoch 8/30
-51648/51684 [============================>.] - ETA: 0s - loss: 0.3040 - acc: 0.8954— val_f1: 0.739023 — val_precision: 0.768832 — val_recall: 0.719142
-— val_f1_w: 0.867667 — val_precision_w: 0.870100 — val_recall_w: 0.869058
-51684/51684 [==============================] - 78s 2ms/step - loss: 0.3039 - acc: 0.8955 - val_loss: 0.3950 - val_acc: 0.8691
-Epoch 9/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.2903 - acc: 0.9009— val_f1: 0.751430 — val_precision: 0.769792 — val_recall: 0.739712
-— val_f1_w: 0.874110 — val_precision_w: 0.875341 — val_recall_w: 0.874108
-51684/51684 [==============================] - 83s 2ms/step - loss: 0.2903 - acc: 0.9010 - val_loss: 0.3772 - val_acc: 0.8741
-Epoch 10/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.2779 - acc: 0.9039— val_f1: 0.752393 — val_precision: 0.772166 — val_recall: 0.742639
-— val_f1_w: 0.871297 — val_precision_w: 0.871833 — val_recall_w: 0.874282
-51684/51684 [==============================] - 83s 2ms/step - loss: 0.2779 - acc: 0.9039 - val_loss: 0.3825 - val_acc: 0.8743
-Epoch 11/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.2663 - acc: 0.9100— val_f1: 0.736928 — val_precision: 0.770432 — val_recall: 0.721984
-— val_f1_w: 0.862387 — val_precision_w: 0.866533 — val_recall_w: 0.862789
-51684/51684 [==============================] - 83s 2ms/step - loss: 0.2663 - acc: 0.9100 - val_loss: 0.4140 - val_acc: 0.8628
-Epoch 12/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.2552 - acc: 0.9120— val_f1: 0.748533 — val_precision: 0.784169 — val_recall: 0.726216
-— val_f1_w: 0.874515 — val_precision_w: 0.875506 — val_recall_w: 0.876023
-51684/51684 [==============================] - 82s 2ms/step - loss: 0.2552 - acc: 0.9120 - val_loss: 0.3885 - val_acc: 0.8760
-Epoch 13/30
-51680/51684 [============================>.] - ETA: 0s - loss: 0.2445 - acc: 0.9152— val_f1: 0.753067 — val_precision: 0.777666 — val_recall: 0.742513
-— val_f1_w: 0.875957 — val_precision_w: 0.877898 — val_recall_w: 0.878983
-51684/51684 [==============================] - 82s 2ms/step - loss: 0.2445 - acc: 0.9152 - val_loss: 0.3942 - val_acc: 0.8790
+Train on 55129 samples, validate on 6126 samples
+Epoch 1/50
+55088/55129 [============================>.] - ETA: 0s - loss: 0.5545 - acc: 0.8145— val_f1: 0.732477 — val_precision: 0.764964 — val_recall: 0.716559
+— val_f1_w: 0.838581 — val_precision_w: 0.844676 — val_recall_w: 0.841169
+55129/55129 [==============================] - 86s 2ms/step - loss: 0.5544 - acc: 0.8145 - val_loss: 0.4835 - val_acc: 0.8412
+Epoch 2/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.4302 - acc: 0.8532— val_f1: 0.755420 — val_precision: 0.818620 — val_recall: 0.719585
+— val_f1_w: 0.856714 — val_precision_w: 0.860478 — val_recall_w: 0.860757
+55129/55129 [==============================] - 83s 2ms/step - loss: 0.4302 - acc: 0.8531 - val_loss: 0.4248 - val_acc: 0.8608
+Epoch 3/50
+55088/55129 [============================>.] - ETA: 0s - loss: 0.3909 - acc: 0.8658— val_f1: 0.769535 — val_precision: 0.820192 — val_recall: 0.738047
+— val_f1_w: 0.860804 — val_precision_w: 0.862253 — val_recall_w: 0.864675
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.3908 - acc: 0.8658 - val_loss: 0.4071 - val_acc: 0.8647
+Epoch 4/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3626 - acc: 0.8757— val_f1: 0.780424 — val_precision: 0.814412 — val_recall: 0.758550
+— val_f1_w: 0.868592 — val_precision_w: 0.869740 — val_recall_w: 0.870389
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.3626 - acc: 0.8758 - val_loss: 0.3861 - val_acc: 0.8704
+Epoch 5/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3419 - acc: 0.8823— val_f1: 0.783106 — val_precision: 0.806826 — val_recall: 0.767035
+— val_f1_w: 0.871497 — val_precision_w: 0.871639 — val_recall_w: 0.872837
+55129/55129 [==============================] - 83s 2ms/step - loss: 0.3418 - acc: 0.8823 - val_loss: 0.3835 - val_acc: 0.8728
+Epoch 6/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3238 - acc: 0.8889— val_f1: 0.787453 — val_precision: 0.815045 — val_recall: 0.766895
+— val_f1_w: 0.872195 — val_precision_w: 0.874534 — val_recall_w: 0.874633
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.3239 - acc: 0.8889 - val_loss: 0.3798 - val_acc: 0.8746
+Epoch 7/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3093 - acc: 0.8935— val_f1: 0.782065 — val_precision: 0.797697 — val_recall: 0.772691
+— val_f1_w: 0.873711 — val_precision_w: 0.875246 — val_recall_w: 0.873327
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.3093 - acc: 0.8935 - val_loss: 0.3732 - val_acc: 0.8733
+Epoch 8/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2953 - acc: 0.8978— val_f1: 0.777524 — val_precision: 0.800048 — val_recall: 0.762805
+— val_f1_w: 0.867708 — val_precision_w: 0.868467 — val_recall_w: 0.869572
+55129/55129 [==============================] - 83s 1ms/step - loss: 0.2952 - acc: 0.8978 - val_loss: 0.3942 - val_acc: 0.8696
+Epoch 9/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2820 - acc: 0.9028— val_f1: 0.783454 — val_precision: 0.822934 — val_recall: 0.758621
+— val_f1_w: 0.875902 — val_precision_w: 0.877293 — val_recall_w: 0.879367
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2820 - acc: 0.9028 - val_loss: 0.3732 - val_acc: 0.8794
+Epoch 10/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2708 - acc: 0.9065— val_f1: 0.790558 — val_precision: 0.811155 — val_recall: 0.773668
+— val_f1_w: 0.877717 — val_precision_w: 0.876924 — val_recall_w: 0.879530
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2708 - acc: 0.9065 - val_loss: 0.3804 - val_acc: 0.8795
+Epoch 11/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2572 - acc: 0.9108— val_f1: 0.778422 — val_precision: 0.789590 — val_recall: 0.770837
+— val_f1_w: 0.870727 — val_precision_w: 0.872009 — val_recall_w: 0.872674
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2571 - acc: 0.9108 - val_loss: 0.3960 - val_acc: 0.8727
+Epoch 12/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2460 - acc: 0.9154— val_f1: 0.788357 — val_precision: 0.805196 — val_recall: 0.775248
+— val_f1_w: 0.876743 — val_precision_w: 0.876289 — val_recall_w: 0.878387
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2460 - acc: 0.9154 - val_loss: 0.3865 - val_acc: 0.8784
+Epoch 13/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2356 - acc: 0.9185— val_f1: 0.768287 — val_precision: 0.766577 — val_recall: 0.772194
+— val_f1_w: 0.864052 — val_precision_w: 0.865701 — val_recall_w: 0.864022
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2355 - acc: 0.9186 - val_loss: 0.4198 - val_acc: 0.8640
+Epoch 14/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2253 - acc: 0.9225— val_f1: 0.768811 — val_precision: 0.775967 — val_recall: 0.768394
+— val_f1_w: 0.864381 — val_precision_w: 0.867127 — val_recall_w: 0.864185
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2254 - acc: 0.9225 - val_loss: 0.4194 - val_acc: 0.8642
+Epoch 15/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2147 - acc: 0.9258— val_f1: 0.782913 — val_precision: 0.790473 — val_recall: 0.778720
+— val_f1_w: 0.875200 — val_precision_w: 0.876058 — val_recall_w: 0.875775
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2147 - acc: 0.9258 - val_loss: 0.4084 - val_acc: 0.8758
+Epoch 16/50
+55088/55129 [============================>.] - ETA: 0s - loss: 0.2045 - acc: 0.9285— val_f1: 0.790696 — val_precision: 0.819661 — val_recall: 0.768516
+— val_f1_w: 0.878328 — val_precision_w: 0.878134 — val_recall_w: 0.880673
+55129/55129 [==============================] - 82s 1ms/step - loss: 0.2044 - acc: 0.9285 - val_loss: 0.4099 - val_acc: 0.8807
 ```
 
 * 놀랍게도 정확도가 다시 한번 올랐고, F1 score가 상당한 수준으로 올랐습니다. 평균치가 저 정도 올랐다는 것은, 이제 아무리 F1 score가 안 좋아도 0.5 정도는 된다는 걸 의미한다고 봐도 무방할 것 같습니다. 처음에 TF-IDF로 코드를 돌릴 때 intonation-dependent utterances (마지막 case) 에 대해 상당히 낮은 F1 score가 나왔던 것 같은데, 해당 태스크에서 상대적으로 Recall (재현률)을 높게 하여 false alarm을 울리는 것이 false positive보다는 낫다는 점을 고려하면 나쁘지 않은 결과입니다. 그런데 한 가지 간과한 것이 있습니다. 지금까지 우리는 열심히 morpheme들을 가지고 놀았는데, 과연 이것을 character-level로 끊어 보면 어떻게 될까요? 아니, 그 전에 우선, 한국어에서 character을 어떻게 정의하는 것이 바람직할까요?
