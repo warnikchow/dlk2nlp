@@ -843,5 +843,20 @@ Epoch 16/50
 * 놀랍게도 정확도가 다시 한번 올랐고, F1 score가 상당한 수준으로 올랐습니다. 평균치가 저 정도 올랐다는 것은, 이제 아무리 F1 score가 안 좋아도 0.5 정도는 된다는 걸 의미한다고 봐도 무방할 것 같습니다. 처음에 TF-IDF로 코드를 돌릴 때 intonation-dependent utterances (마지막 case) 에 대해 상당히 낮은 F1 score가 나왔던 것 같은데, 해당 태스크에서 상대적으로 Recall (재현률)을 높게 하여 false alarm을 울리는 것이 false positive보다는 낫다는 점을 고려하면 나쁘지 않은 결과입니다. 그런데 한 가지 간과한 것이 있습니다. 지금까지 우리는 열심히 morpheme들을 가지고 놀았는데, 과연 이것을 character-level로 끊어 보면 어떻게 될까요? 아니, 그 전에 우선, 한국어에서 character을 어떻게 정의하는 것이 바람직할까요?
 
 ## 8. Character embedding
+
+Due to the distinguished writing style, the embedding of Korean letters *Hangul* is difficult even from its definition. For many Romanian or German langauges, latin alphabets are utilized as the characters and have been widely used in region of text analysis since [Zhang, 2015](http://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classifica). However, for Korean, the morpho-syllabic blocks that represent the syllables, can be decomposed into *jamo*, the letters or alphabets of Korean.
+
+To be specific, The alphabets comprise the morpho-syllabic blocks (characters) that are equal to the phonetic unit of the syllable, in the conjunct form of Syllable: CV(C). This notation implies that there should be at least one consonant (namely *cho-seng*, the first sound) and one vowel (namely *cwung-seng*, the second sound). An additional consonant (namely *cong-seng*, the third sound) is auxiliary. However, usually in the character decomposition, three slots are fully held for each component; an empty cell comes for the third entry if there is no auxiliary consonant. The number of the possible alphabets, or (composite) consonants/vowels, that can come for each slot is 19, 21, and 27. For instance, in a character '각 (*kak*)', three clock-wisely arranged alphabets ㄱ, ㅏ, and ㄱ sound *k*, *a*, and *k*, respectively.
+
+* 앞서 말했듯, 한국어의 writing system은 자연발생된 것이 아닌 단체 (거진 개인)에 의해 창조되었다는 점에서 매우 특별하며, 어떤 음절에 해당하는 morpho-syllabic block을 decompose하여 그 음절을 이루는 소리 성분들에 해당하는 alphabet, 즉 자모를 알아낼 수 있다는 점에서도 독특합니다.
+
+* 좀 더 자세히 얘기하자면 한글은 CV(C)의 conjunct form으로 되어 있으며, 이는 한 음절을 구성하기 위해 최소한 자모 한 개씩은 있어야 함을 의미합니다. 이는 초성과 중성이라고 불리며, CV를 지칭하죠. 종성, 즉 third sound (C)의 경우는, 있어도 되고 없어도 상관없습니다. 초성으로 가능한 자음은 19개, 중성으로 가능한 모음은 21개이며, 종성으로 가능한 자음은 composite consonants를 포함하여 27개입니다 (empty일 경우 포함하면 28개).
+
+---
+
+For a clearness, let's denote the morpho-syllabic blocks as *characters* and the consonants/vowels as *alphabets*. The description above yields total 11,172 possible characters. However, one-hot encoding those combinations into 11,172-dim vector seems very redundant at a glance. Therefore, there have been various character encoding schemes suggested. The schemes include two approaches; 1) decomposing the blocks into alphabets and 2) preserving them.
+
+* 보다 논의를 명확히 하기 위해, 음절들을 character라고 하고 자모를 alphabets라고 둡시다. 위의 설명에 따르면 우리는 총 11,172개의 가능한 자모 조합을 얻는데, 이를 one-hot encoding하는 것은 매우 costly해 보이기도 하거니와 그에 따른 merit을 딱히 찾기도 어렵습니다. 따라서 이 문제에 대하여 한국어 character을 encoding하는 다양한 방법들이 소개되었는데, 이 방법들은 크게 1) 자소 분리 2) 음절 유지의 두 가지로 나뉠 수 있습니다.
+
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
