@@ -95,7 +95,7 @@ fci_label= [int(t[0]) for t in fci]
 
 ---
 
-The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
+The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer. For a modified usage of Twitter() class since Konlpy > 0.5, refer to [this documentation](http://konlpy.org/en/latest/api/konlpy.tag/#okt-class).
 
 ```python
 import numpy as np
@@ -122,7 +122,9 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 
 * 데이터를 읽어들였으니, 이제 형태소 분리를 통해 어절이라는 큰 뭉텅이들을 좀 더 세밀한 단위로 나눠 보도록 하겠습니다. 음절 기반 방법, 혹은 자소 분해 방법들도 요즘 많이 사용되지만, 형태소 기반의 문장 표현이 아무래도 교착어인 한국어에서 가장 기본적인 접근 방법이 아닌가 싶습니다. 
 
-* 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다. 위의 코드에서 *twit_token* 함수는 각 문장을 형태소 레벨로 나누어, 형태소 사이에 space를 준 morpheme sequece를 출력합니다. 아래의 코드는 *fci_data*를 train:test ratio 9:1로 split합니다.
+* 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다. 위의 코드에서 *twit_token* 함수는 각 문장을 형태소 레벨로 나누어, 형태소 사이에 space를 준 morpheme sequece를 출력합니다. 아래의 코드는 *fci_data*를 train:test ratio 9:1로 split합니다. 
+
+* 위 코드는 Konlpy 0.4.4를 이용한 코드입니다. Konlpy > 0.5 부터 변형된 Twitter() 클래스의 사용을 위해서는 [이 문서](http://konlpy.org/en/latest/api/konlpy.tag/#okt-class)를 참고하세요.
 
 ## 2. One-hot encoding and sentence vector
 The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the **real meaning**, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is **one-hot encoding** that assigns 1 for only one entry if a specific word is given. Here, the words denote morphemes which are yielded by a morphological analysis, not the *eojeol* that is the unit of spacing.
@@ -231,7 +233,7 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 
 ---
 
-> The result is as below; it is weird that the bigram features yielded quite a lower accuracy. It is assumed that the property of the corpus, where the sentence label does not depend solely on the polarity items or emotion words, may have affected the performance. Also, the dimension of the feature (3,000) which was fixed to guarantee the fair comparison between the two models, could have been a harsh obstacle for the bigram model.
+The result is as below; it is weird that the bigram features yielded quite a lower accuracy. It is assumed that the property of the corpus, where the sentence label does not depend solely on the polarity items or emotion words, may have affected the performance. Also, the dimension of the feature (3,000) which was fixed to guarantee the fair comparison between the two models, could have been a harsh obstacle for the bigram model.
 
 ```properties
 # CONSOLE RESULT
@@ -276,9 +278,9 @@ However, considering the computation issue which has been very important up to t
 * 여태까지 한 내용을 세줄요약해 보면 다음과 같습니다.</br>
 1. 전산언어학은 기계로 하여금 사람 말을 잘 알아먹도록 하는 학문</br>
 2. 단어 및 문장을 모델링하는 기본적인 방법으로 one-hot encoding (BoW) 및 TF-IDF가 있음</br>
-3. 한국어는 교착어적 특징 때문에 어절 단위 분석보다 형태소 단위 분석이 효과적일 수 있음</br>
+3. 한국어는 교착어적 특징 때문에 어절 단위 분석보다 형태소 단위 분석이 효과적일 수 있음
 
-이외에도 수치화된 문장을 분류하는 알고리즘에는 SVM 이나 LR 등이 있다, 그 성능을 평가하는 measure에는 accuracy나 F1 score 등이 있다 ... 라는 것도 간략히 말하고 지나왔죠. 
+* 이외에도 수치화된 문장을 분류하는 알고리즘에는 SVM 이나 LR 등이 있다, 그 성능을 평가하는 measure에는 accuracy나 F1 score 등이 있다 ... 라는 것도 간략히 말하고 지나왔죠. 
 
 * 그런데 이러한 방법론들은 분석해야 할 데이터가 많아지고 사전의 크기가 커질수록 computation의 문제에 당면하게 됩니다. 특히나 데이터를 몰빵해넣고 병렬연산으로 승부하는 딥러닝의 경우 더욱 그렇지요. 예컨대 30 개의 형태소로 된 문장을 벡터 sequence로 나타내어 recurrent neural network 같은 시스템으로 요약하고자 할 때, 딕셔너리 사이즈가 10만이라면, 10만 x 30이라는 무시무시한 사이즈의 행렬이 문장 하나를 표현하여 인풋으로 들어가게 되는거죠. 물론 아까 보았듯 사용하는 벡터의 크기는 조절할 수 있고, 각 벡터가 각 단어를 표현하는 것이 아주 명확하긴 하지만요.
 
@@ -286,7 +288,7 @@ However, considering the computation issue which has been very important up to t
 
 ---
 
-> The term word2Vec is very intuitive, and it converts the words, which are discrete (and were sparsely represented so far), into the numerics that are close to the continuousness. Since there are a bunch of terrific articles on the topic outside, in English, a review on word2vec and its related models are discussed mainly in Korean.
+The term word2Vec is very intuitive, and it converts the words, which are discrete (and were sparsely represented so far), into the numerics that are close to the continuousness. Since there are a bunch of terrific articles on the topic outside, in English, a review on word2vec and its related models are discussed mainly in Korean.
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/skipgram.png" width="400"><br/>
@@ -304,24 +306,29 @@ However, considering the computation issue which has been very important up to t
 
 ---
 
-> Up to date, many advanced models of word vectors which base on word2vec have been proposed. For instance, [**GloVe**](https://nlp.stanford.edu/pubs/glove.pdf) represents the word vectors considering the co-occurrence in the window, and [**fastText**](https://arxiv.org/abs/1607.04606) utilizes the subword n-gram so that the embedding can be efficient for morphologically rich languages. In the following approaches that use dense word vectors, we will adopt [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor), for the project 3i4k.
+Up to date, many advanced models of word vectors which base on word2vec have been proposed. For instance, [**GloVe**](https://nlp.stanford.edu/pubs/glove.pdf) represents the word vectors considering the co-occurrence in the window, and [**fastText**](https://arxiv.org/abs/1607.04606) utilizes the subword n-gram so that the embedding can be efficient for morphologically rich languages. In the following approaches that use dense word vectors, we will adopt [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor), for the project [RAWS](github.com/warnikchow/raws). Use Gensim if fastText is not installed.
 
 ```python
 import fasttext
 model_ft = fasttext.load_model('vectors/model_drama.bin')
+
+# In case fasttext is not installed
+# use FastText wrapper in Gensim as:
+# from gensim.models.wrappers import FastText
+# model_ft = FastText.load_fasttext_format('vectors/model_drama.bin')
 ```
 
 * Word2vec은 이런 저차원 임베딩의 포문을 열었을 뿐이고 (for문 아닙니다) 이후로 수많은 베리에이션이 등장했습니다. 이 때 사용하는 알고리듬이 skip-gram이란 점이 크게 변하지는 않았지만, 다양한 objective를 설정하며 특정 task에 효율적으로 적용할 수 있는 vector들이 등장했죠.
 
 * 가장 많이 알려진 두 베리에이션은 GloVe와 fastText입니다. 전자는 word2vec 이전에 사용되던 sparse representation 중 하나인 co-occurrence matrix의 개념을 training objective에 활용하여 보다 global하고 syntactic한 특징도 word vector에 반영할 수 있게 한 것이고, 후자는 word2vec과 사실상 같은 알고리즘이지만 그 트레이닝 효율을 거의 몇백배 수준으로 끌어올려 빠르게 트레이닝하면서도 task 성능은 엇비슷하게 유지할 수 있게 하는 알고리듬입니다. 또한 fastText는 subword n-gram model을 차용하여, word 단위로 나뉘어지지 않은, 단어 내의 character n-gram들도 일종의 word로 보고 그 분포를 전체 트레이닝에 고려한다는 특징을 가지고 있지요. 이를 통해 morphologically rich한 언어들에서도 효율적으로 활용 가능하다는 점을 논문에서 어필하고 있구요.
 
-* GloVe의 경우 stanford에서 제공하는 [wiki/twitter기반 pre-trained vector](https://nlp.stanford.edu/projects/glove/)가 있으며, fastText의 경우는 꽤 많은 언어로 pre-trained vector을 제공하지만 학습 속도가 굉장히 빨라 저 같은 경우는 갖고 있는 코퍼스로 새로 training하기도 합니다. Subword n-gram이 교착어인 한국어에도 굉장히 유용하여, 저 같은 경우는 fastText로 트레이닝된 word vector set을 character embedding에 사용하고 있구요. 약 200만 문장의 드라마 스크립트를 통해 학습한 word vector dictionary는 [다음의 주소](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor)에서 제공됩니다.
+* GloVe의 경우 stanford에서 제공하는 [wiki/twitter기반 pre-trained vector](https://nlp.stanford.edu/projects/glove/)가 있으며, fastText의 경우는 꽤 많은 언어로 pre-trained vector을 제공하지만 학습 속도가 굉장히 빨라 저 같은 경우는 갖고 있는 코퍼스로 새로 training하기도 합니다. Subword n-gram이 교착어인 한국어에도 굉장히 유용하여, 저 같은 경우는 fastText로 트레이닝된 word vector set을 character embedding에 사용하고 있구요. 약 200만 문장의 드라마 스크립트를 통해 학습한 word vector dictionary는 [다음의 주소](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor)에서 제공됩니다. [fasttext 라이브러리](https://pypi.org/project/fasttext/0.8.3/)를 이용해 bin 파일을 바로 load할 수 있으며, 설치가 잘 되지 않을 경우 Gensim의 FastText wrapper을 이용해 비슷한 방식으로 load가 가능합니다.
 
 * 앞서도 말했지만, 26개의 알파벳만 있으면 되는 영어와 달리, 한국어는 2500개 상당의 자모 조합이 있어 one-hot encoding을 직접적으로 character embedding에 사용하기 쉽지 않죠. 이럴 때 유용하게 사용할 수 있는 것이 저차원으로 임베딩된 character vector입니다. 어느 정도 분포적인 특징을 반영할 수 있으면서도 computational하게 부담을 덜 줄 수 있는 그런 feature로 사용할 수 있는 것입니다. 물론 형태소, 어절 모두 임베딩의 대상이 될 수 있습니다. 어떤 것을 선택할지는 형태소 분석기의 유무, 구동 및 개발 환경 등에 따라 자유롭게 선택하면 될 것입니다. 
 
 ## 5. Document vectors and NN classifier
 
-> In the first few chapters, we've demonstrated how the corpus we've adopted is preprocessed, featurized, trained and predicted with the sparse sentence encodings. However, since we've obtained the dense word embeddings for the morphemes (as we've obtained for one-hot encoded words), it's plausible to extend it to the sentence vector, for instance by summation. 
+In the first few chapters, we've demonstrated how the corpus we've adopted is preprocessed, featurized, trained and predicted with the sparse sentence encodings. However, since we've obtained the dense word embeddings for the morphemes (as we've obtained for one-hot encoded words), it's plausible to extend it to the sentence vector, for instance by summation. 
 
 ```python
 from numpy import linalg as la
@@ -346,11 +353,11 @@ fci_nn = featurize_nn(fci_sp_token_train+fci_sp_token_test,100)
 
 * 앞서 one-hot encoding과 tf-idf로 문장을 수치화하는 방법, 그리고 그것이 sparse vector이라는 것까지 말씀드린 바 있습니다. 정보가 discrete하다는 것은 기계에게나 사람에게나 매우 직관적으로 다가오기에, 문장의 분류에 있어 굉장히 유용하게 사용된다는 것두요. 하지만 지난 몇 시간 동안 dense word vector들을 얘기하는 동안, 그 친구들을 문장 수치화에 이용할 수 있지 않을까 생각하는 분도 분명 계실 겁니다. word2vec을 제안한 사람들의 머릿속을 들여다볼 수는 없지만, 결과적으로 그 등장이 문장 임베딩에 있어 하나의 패러다임 전환이 되었죠.  
 
-* “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의 or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다.
+* “I really love you” 이라는 영어 문장을 한번 생각해 봅시다. 일단 가장 먼저 생각해볼 수 있는 것은, \[0 0 0 ... 1 ... 1 ... 1 ... 1 ... 0 0 0\] 이런 식으로 나타내어진 multi-hot vector (one-hot vectors의 or summation)이겠죠. 그 다음은 \[0 0 0 ... 0.3 ... 0.7 ... 0.9 ... 0.4 ... 0 0 0\] 이런 식으로 표현된 tf-idf일 겁니다. 이제 word2vec이 무엇인지 배웠으므로, 이런 방법도 생각해 볼 수 있을 겁니다. ‘문장 내 모든 word와 word embedding function f에 대해, f(w)를 모두 더하기’ 즉, 워드 임베딩이 100차원의 real vector이라면, 전체 sentence vector s=sum(f(w))도 100차원의 real vector가 되는 방법이죠. 여기에 normalization을 위해 l2_norm(s)나 word 개수 (여기서는 4)로 s를 나눠 주면 좀 더 reliable한 표현이 될 것입니다. 앞서 말한 과정이 *featurize_nn*에 구현되어 있으며, 해당 함수는 corpus 전체를 input으로 받아 각 문장마다 100차원 (word vector dim)의 real vector을 출력합니다.
 
 ---
 
-> And here comes the Keras, which is a widely used high-level wrapper for TensorFlow (and other libraries i.e. Theano and CNTK; though not used in general). Since we only use the *Sequential()* for the codes not incorporating the concatenated layers or attention models, only the *layer* will be imported. For the computation of average/weighted F1 score per epoch, an additional class is defined here. Also, considering the imbalance in the class volumes, we obtain the class weight set that is utilized in the training session.
+And here comes Keras, which is a widely used high-level wrapper for TensorFlow (and other libraries i.e. Theano and CNTK; though not used in general). Since we only use the *Sequential()* for the codes not incorporating the concatenated layers or attention models, only the *layer* will be imported. For the computation of average/weighted F1 score per epoch, an additional class is defined here. Also, considering the imbalance in the class volumes, we obtain the class weight set that is utilized in the training session.
 
 ```python
 import tensorflow as tf
@@ -403,7 +410,7 @@ class_weights_fci = class_weight.compute_class_weight('balanced', np.unique(fci_
 
 ---
 
-> And the Below is the model construction and the evaluation phase. Note that the folder *tutorial* was created in the same directory to save the checkpoint models, recording F1 scores and the accuracy. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
+And the Below is the model construction and the evaluation phase. Note that the folder *tutorial* was created in the same directory to save the checkpoint models, recording F1 scores and the accuracy. It is quite surprising that a simple summation boosted the accuracy and the F1 score by a large factor, even considering that the concept of making up the sentence vector is fundamentally identical to those of one-hot encoding and TF-IDF!
 
 ```python
 def validate_nn(result,y,hidden_dim,cw,filename):
@@ -559,13 +566,13 @@ Epoch 29/30
 
 ---
 
-> This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
+This kind of sentence encoding gives us quite a rich representation of the sentences in the sense that the 100-dimensional vector itself yields a variety of values. This might be advantageous for tasks such as sentiment analysis, in which the inference largely relies on some polarity items or emotion words. However, we should notice that a simple summation does not say anything about the distributional or sequential information the sentence possesses; for instance, “You haven’t done it at all” and “Haven’t you done it at all” share same word composition but the intention clearly differs. The same kind of problem is more critical in Korean, due to the language being scrambling.
 
 * 이런 방식의 sentence vector 만들기는 sentiment classification 같은 task에서는 꽤나 좋은 성능을 냅니다. sentiment는 주로 단어 내의 어떤 polarity 및 subjectivity가 있는 단어에 의해 형성될 가능성이 높은데, 더하는 것만으로도 어떤 word가 있다는 것을 classifier가 알게 하기엔 충분하기 때문이죠. 하지만, summation의 단점은 분포나 순서를 고려할 수 없다는 겁니다. 예컨대, “You haven’t done it at all”과 “Haven’t you done it at all”은 그 단어 구성은 같아도 (capital 여부는 무시합시다) 전달하는 의미는 전혀 다르죠. word vector의 summation이 아니라 concatenation으로 한다면 이런 일을 예방할 수 있겠습니다만, 뭔가 임시방편적인 처방이고 결국 다시 저차원 임베딩이 아니게 되어버리겠죠. 이런 문제를 어떻게 하면 해결할 수 있을까요?
 
 ## 6. CNN-based sentence classification
 
-> [**Convolutional neural network**](https://ieeexplore.ieee.org/abstract/document/726791) (CNN), originally developed by LeCun, is a widely used neural network system which was primarily suggested for image processing (handwriting recognition). It roughly resembles the perception process of a visual system, summarizing a given image into an abstract values via repititive application of convolution and pooling. 
+[**Convolutional neural network**](https://ieeexplore.ieee.org/abstract/document/726791) (CNN), originally developed by LeCun, is a widely used neural network system which was primarily suggested for image processing (handwriting recognition). It roughly resembles the perception process of a visual system, summarizing a given image into an abstract values via repititive application of convolution and pooling. 
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/alexnet2.png" width="700"><br/>
@@ -577,7 +584,7 @@ Epoch 29/30
 
 ---
 
-> However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
+However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
 ```python
 def featurize_cnn(corpus,wdim,maxlen):
@@ -604,7 +611,7 @@ fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 ---
 
-> There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
+There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
 
 ```python
 def validate_cnn(result,y,filters,hidden_dim,cw,filename):
@@ -633,7 +640,7 @@ validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
 
 ---
 
-> The result is encouraging! Although there was a little improvement in F1 score, we had about a 20% RRER for the accuracy (regarding the model with the best performance). The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
+The result is encouraging! Although there was a little improvement in F1 score, we had about a 20% RRER for the accuracy (regarding the model with the best performance). The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
 
 ```properties
 # CONSOLE RESULT
@@ -698,7 +705,7 @@ Epoch 8/30
 
 ## 7. RNN (BiLSTM)-based sentence classification
 
-> **Recurrent neural network (RNN)**, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to the high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [**long short-term memory (LSTM)**](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).
+**Recurrent neural network (RNN)**, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to the high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [**long short-term memory (LSTM)**](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/rnn.jpg" width="700"><br/>
@@ -710,7 +717,7 @@ Epoch 8/30
 
 ---
 
-> In this tutorial, we utilize the BiLSTM structure. The featurization is almost identical to the case of CNN, except that the channel information is omitted. To say short, for the same data (ignoring the channel number), CNN extracts locally notable features and RNN extracts the relations reflected in the sequential arrangement.
+In this tutorial, we utilize the BiLSTM structure. The featurization is almost identical to the case of CNN, except that the channel information is omitted. To say short, for the same data (ignoring the channel number), CNN extracts locally notable features and RNN extracts the relations reflected in the sequential arrangement.
 
 ```python
 def featurize_rnn(corpus,wdim,maxlen):
@@ -748,7 +755,7 @@ validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 
 ---
 
-> We obtained another boost in performance, especially very high in F1 score. This implies that our task which deals with the intention of Korean sentences is largely influenced by the word order. This may have been an important factor in identifying the rhetoricalness, for instance, '뭐 해 지금 (what / do / now, *what (the hell) are you doing now*)' sounds much more rhetorical than '지금 뭐 해 (now / what / do, *what are you doing now*)', in view of native. However, so far we've conducted the experiments given the morpheme decomposition. Will the real semantics NOT be embedded in the characters? Well, before that, how should **character** be defined in Korean, which has distinguished morpho-syllabic blocks (which are different from alphabets) as a unit of character? 
+We obtained another boost in performance, especially very high in F1 score. This implies that our task which deals with the intention of Korean sentences is largely influenced by the word order. This may have been an important factor in identifying the rhetoricalness, for instance, '뭐 해 지금 (what / do / now, *what (on earth) are you doing now*)' sounds much more rhetorical than '지금 뭐 해 (now / what / do, *what are you doing now*)', in view of native. However, so far we've conducted the experiments given the morpheme decomposition. Will the real semantics NOT be embedded in the characters? Well, before that, how should **character** be defined in Korean, which has distinguished morpho-syllabic blocks (which are different from alphabets) as a unit of character? 
 
 ```properties
 # CONSOLE RESULT
