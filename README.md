@@ -68,7 +68,7 @@ where the [inter-annotator (IAA)](https://en.wikipedia.org/wiki/Cohen%27s_kappa)
 * Annotation guideline이 어떤 형식인지 궁금하신 분들은 [이곳](https://drive.google.com/open?id=1AvxzEHr7wccMw7LYh0J3Xbx5GLFfcvMW)을 참고하시면 됩니다.
 
 ## 1. Data preprocessing
-> For the next step, we should pay attention to how we can manage HANGUL, the letters of Korean writing system (WS). Korean WS, letter and its alphabets *Jamo* which was (maybe solely) invented by The Great King Sejong, incorporate special morpho-syllabic blocks which have a role of syllable and consist of CV(C), making Korean as a representative language with featural WS. The blocks are agglutinated to make up the word *eojeol*, which should be decomposed into morphemes for a semantically meaningful language processing. The spacings go between the *eojeol*s, to enhance the readability of a sentence. Many morphological analyzers give an additional spacing between the morphemes; some analyzers such as [Twitter](https://github.com/twitter/twitter-korean-text) simply give spaces, and there are the ones which conduct an elaborate tokenizing process of block decomposition, such as [Kkma](http://kkma.snu.ac.kr/). Total five analyzers are wrapped in the famous Korean natural language processing toolkit, [KoNLPy](http://konlpy.org/en/v0.4.4/). In this tutorial, we proceed with the Twitter analyzer, for its speed and to prevent the letters being decomposed.
+For the next step, we should pay attention to how we can manage HANGUL, the letters of Korean writing system (WS). Korean WS, letter and its alphabets *Jamo* which was (maybe solely) invented by The Great King Sejong, incorporate special morpho-syllabic blocks which have a role of syllable and consist of CV(C), making Korean as a representative language with featural WS. The blocks are agglutinated to make up the word *eojeol*, which should be decomposed into morphemes for a semantically meaningful language processing. The spacings go between the *eojeol*s, to enhance the readability of a sentence. Many morphological analyzers give an additional spacing between the morphemes; some analyzers such as [Twitter](https://github.com/twitter/twitter-korean-text) simply give spaces, and there are the ones which conduct an elaborate tokenizing process of block decomposition, such as [Kkma](http://kkma.snu.ac.kr/). Total five analyzers are wrapped in the famous Korean natural language processing toolkit, [KoNLPy](http://konlpy.org/en/v0.4.4/). In this tutorial, we proceed with the Twitter analyzer, for its speed and to prevent the letters being decomposed.
 
 * 한국어와 한글, 문자 체계, 형태소, 띄어쓰기 및 형태소 분석기에 대해 주절주절 설명해 봤는데요, 아마 한국어 L1 화자라면 대부분 익숙한 내용이실 테니 이 부분의 한글 설명은 생략하도록 하겠습니다 ㅎㅎ 
 
@@ -78,7 +78,7 @@ where the [inter-annotator (IAA)](https://en.wikipedia.org/wiki/Cohen%27s_kappa)
 
 ---
 
-> The most important part of Korean NLP lies in using Python 3.x. For the lower version, the encoding issue will bother you. That is, in Python 3.x, you don't have to perform an additional encoding for HANGUL to be read and written. [THIS](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt) is the file URL, which is a single *.txt* file that has the first column of the labels and the second column of the sentences. The dataset is split into train and test set of ratio 9:1 and the test set denotes last 10% of the corpus. The following code reads the dataset into the sentences and the labels, where the dataset is placed in the path 'data/fci.txt' for the directory you're running the console.
+The most important part of Korean NLP lies in using Python 3.x. For the lower version, the encoding issue will bother you. That is, in Python 3.x, you don't have to perform an additional encoding for HANGUL to be read and written. [THIS](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt) is the file URL, which is a single *.txt* file that has the first column of the labels and the second column of the sentences. The dataset is split into train and test set of ratio 9:1 and the test set denotes last 10% of the corpus. The following code reads the dataset into the sentences and the labels, where the dataset is placed in the path 'data/fci.txt' for the directory you're running the console.
 
 ```python
 def read_data(filename):
@@ -95,7 +95,7 @@ fci_label= [int(t[0]) for t in fci]
 
 ---
 
-> The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
+The last part of data preprocessing is tokenizing the sentence into morphemes, as emphasized previously. Although many character-based (morpho-syllabic blocks) or alphabet-based (consonants and vowels, or *Jamo*) approaches are utilized these days, the morpheme-based approach is still meaningful due to the nature of Korean as an agglutinative language. For the sparse vector classification such as one-hot encoding and TF-IDF which will be displayed in the following chapter, we will adopt the morpheme sequence which can be obtained by the Twitter tokenizer.
 
 ```python
 import numpy as np
@@ -122,29 +122,29 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 
 * 데이터를 읽어들였으니, 이제 형태소 분리를 통해 어절이라는 큰 뭉텅이들을 좀 더 세밀한 단위로 나눠 보도록 하겠습니다. 음절 기반 방법, 혹은 자소 분해 방법들도 요즘 많이 사용되지만, 형태소 기반의 문장 표현이 아무래도 교착어인 한국어에서 가장 기본적인 접근 방법이 아닌가 싶습니다. 
 
-* 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다.
+* 아까 말씀드렸듯 트위터 형태소 분석기를 사용하여 어절들을 분리할 계획이며, 이는 one-hot encoding이나 TF-IDF를 이용한 sparse vector classification에 활용하기 위함입니다. 위의 코드에서 *twit_token* 함수는 각 문장을 형태소 레벨로 나누어, 형태소 사이에 space를 준 morpheme sequece를 출력합니다. 아래의 코드는 *fci_data*를 train:test ratio 9:1로 split합니다.
 
 ## 2. One-hot encoding and sentence vector
-> The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the **real meaning**, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is **one-hot encoding** that assigns 1 for only one entry if a specific word is given.
+The fundamental of computational linguistics lies in making machines understand human utterances (or, natural language). Since it is difficult for even human beings to understand the **real meaning**, the first step is to represent the words and sentences into the numerics that are computable for the machine learning systems. Given the dictionary of vocabulary size N, the most famous and intuitive approach is **one-hot encoding** that assigns 1 for only one entry if a specific word is given. Here, the words denote morphemes which are yielded by a morphological analysis, not the *eojeol* that is the unit of spacing.
 
 * 전산 언어학은 기본적으로 컴퓨터한테 사람이 말하는 것, 즉 자연어를 이해시키는 과정이라고 할 수 있겠습니다. 그래서 우리는 컴퓨터로 하여금, '아 진짜 우리 말을 이해하진 못해도, 대충 어떤 내용인지 판단은 할 수 있게 해 보자' 생각을 하게 됩니다. 그렇게 해서 나오게 된 표현법 (representation) 중 가장 기본적으로 사용되고, 매우 강력한 편이라 아직까지도 많은 곳에서 사용하고 있는 방법론은 바로 단어의 one-hot encoding입니다. 
 
-* 이 방법을 쓰기 위해선 '우리가 생각할 단어 전체 set = Dict'을 생각해야 합니다. 가장 먼저 생각해볼 수 있는 건 우리가 사용할 코퍼스에 있는 모든 단어들의 모임이죠. 코퍼스의 사이즈가 커질수록 Dict도 커질 것이고, 물론 단어는 countably infinite하게 만들어낼 수 있지만 여기선 '그나마 자주 쓰이는 녀석들'로 생각합시다. 
+* 이 방법을 쓰기 위해선 '우리가 생각할 단어 전체 set = *Dict*'을 생각해야 합니다. 가장 먼저 생각해볼 수 있는 건 우리가 사용할 코퍼스에 있는 모든 단어들의 모임이죠. 코퍼스의 사이즈가 커질수록 Dict도 커질 것이고, 물론 단어는 countably infinite하게 만들어낼 수 있지만 여기선 '그나마 자주 쓰이는 녀석들'로 생각합시다. 
 
-* 이 Dict가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(Dict) = V 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 V-dim의 one-hot vector로 표현할 수 있게 되는 겁니다.
+* 이 *Dict*가 생각보다 커서 실제로는 보통 많이 쓰이는 n만 단어 같이 제한을 둬서 잡습니다. 목적에 따라 functional한 녀석들은 아예 카운트하지 않기도 해요. 이 때 size(*Dict*) = V 이라 하면, 우리는 (고려하기로 한) 모든 단어들을 V-dim의 one-hot vector로 표현할 수 있게 되는 겁니다. 물론 이전 chapter에서의 결과를 생각한다면, 여기서 word는 morpheme이 되겠죠. 물론 한국어에서 띄어쓰기의 단위인 어절이 영어에서의 word와 조금 더 잘 대응이 되고, 실제로 어절 기반의 processing이 더 정확하게 반영할 수 있는 정보들도 있겠지만, 몇만 개나 되는 morpheme들의 조합이 훨씬 많은 어절 variation을 내포하고 있을 것을 고려하면, 어절을 사용한 one-hot encoding이 얼마나 많은 computation을 요구하게 될지 짐작할 수 있습니다.
 
 ---
 
-> What should we do with these large-dimensional vectors? The first thing we can think of is a feature called **Bag-of-Words** (BoW). The literal meaning is a bag which contains words, and for Korean, it might be either words (*eojeol*), morphemes, characters, or alphabets (*Jamo*). Though we've decided only to use morphemes for the sparse representations, these can be replaced with whatever feature you want to adopt. BoW approach is straightforward; it just assigns 1 to the corresponding entry if the word in the sentence. This can provide the computer with a numerical value which represents the sentence! The code utilizing [NLTK](https://github.com/nltk/nltk) is under construction.
+What should we do with these large-dimensional vectors? The first thing we can think of is a feature called **Bag-of-Words** (BoW). The literal meaning is a bag which contains words, and for Korean, it might be either words (*eojeol*), morphemes, characters, or alphabets (*Jamo*). Though we've decided only to use morphemes for the sparse representations, these can be replaced with whatever feature you want to adopt. BoW approach is straightforward; it just assigns 1 to the corresponding entry if the word in the sentence. This can provide the computer with a numerical value which represents the sentence! 
 
-* 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 V-dim one-hot vector들의 OR-sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
+* 어쨌든 우리는 가장 간단한, sparse한 word vector을 만들었습니다. 이걸 갖고 뭘 하느냐? 가장 먼저 생각해볼 수 있는 것은 bag-of-words란 녀석입니다. 말 그대로 '단어가 든 가방' 이에요. 이 때 가방 = 문장 입니다. 문장 안에 어떤 단어들이 들었냐를 V-dim one-hot vector들의 OR-sum operation (하나만 있어도 1됨) 으로 표현하는 거죠. 
 
-* 예컨대 "신이 그댈 사랑해"라는 문장이 있고 '신이' = \[1 0 0 0 0 0 \], '그댈' = \[0 0 1 0 0 0\], '사랑해' = \[0 0 0 0 0 1\]로 표현된다고 합시다. 여기서 코퍼스는 여섯 개의 토큰 (단어구성단위 라고 합시다 일단)으로 구성된 아주 작은 Dict를 yield했겠지요. 그렇다면 상기 문장은 \[1 0 1 0 0 1\]의 size(Dict)-dim binary vector로 표현되는 겁니다. 이렇게 해서 뭘 할 수 있냐구요? 이제 컴퓨터도 알아먹는 수치적 정보가 되었으니, 각종 분류기에 넣어 재미를 볼수 있죠! 
+* 예컨대 "신이 그댈 사랑해"라는 문장이 있고 '신이' = \[1 0 0 0 0 0 \], '그댈' = \[0 0 1 0 0 0\], '사랑해' = \[0 0 0 0 0 1\]로 표현된다고 합시다. 여기서 코퍼스는 여섯 개의 토큰 (단어구성단위 라고 합시다 일단)으로 구성된 아주 작은 *Dict*를 yield했겠지요. 그렇다면 상기 문장은 \[1 0 1 0 0 1\]의 size(Dict)-dim binary vector로 표현되는 겁니다. 이렇게 해서 뭘 할 수 있냐구요? 이제 컴퓨터도 알아먹는 수치적 정보가 되었으니, 각종 분류기에 넣어 재미를 볼수 있죠! 
 
 * 물론 태클이 들어올 수 있습니다. 저 문장을 사실 '신' '이' 그대' '-ㄹ' '사랑' 'ㅎ' '-애' 로 나눠야 합당하지 않느냐, 한 문장에서 여러 번 카운트되는 단어들이 있으면 one-hot은 부당한 representation이 아니냐 뭐 그런... 첫 번째의 경우 우리가 문장을 자소로 분리하지 않는 Twitter analyzer을 썼기 때문에 어쩔 수 없는 부분입니다. 두 번째의 경우 다음 chapter에서 더 다뤄 보도록 하겠습니다.
 
 ## 3. TF-IDF and basic classifiers
-> Previously, we've introduced one-hot encoding of the words and the sparse sentence representation based on the BoW model. However, despite its transparency and conciseness, one-hot encoding does not convey the word frequency regarding the document. This is where the concept of **term frequency** (TF) came out; the word frequency is taken into account to convey the relative importance of each word. For instance, the word 'I' and 'you' in the sentence *I love you, I want you, I need you* may be assigned the word frequency of 3 instead of 1 which is assigned to the verbs.
+Previously, we've introduced one-hot encoding of the words and the sparse sentence representation based on the BoW model. However, despite its transparency and conciseness, one-hot encoding does not convey the word frequency regarding the document. This is where the concept of **term frequency** (TF) came out; the word frequency is taken into account to convey the relative importance of each word. For instance, the word 'I' and 'you' in the sentence *I love you, I want you, I need you* may be assigned the word frequency of 3 instead of 1 which is assigned to the verbs.
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/tfidf.png" width="400"><br/>
@@ -158,7 +158,7 @@ fci_sp_token_test  = [nltk.word_tokenize(row) for row in fci_token_test]
 
 ---
 
-> However, the problem is that the high frequency does not indicate that importance of the word. Thus, the concept of **inverse-document frequency** (IDF) is introduced, as a way of multiplying the inverse fraction of the frequency of the word among the whole documents. This prevents the overestimation of the functional words in many cases; to be honest, 'I' and 'you' are not as important as 'love', 'want' and 'need'. For instance, in the morpheme-based analysis, many particles in Korean are used repetitively in the sentences; those will be assigned a low IDF so that the lexical words are emphasized alternatively. The following code utilizing the scikit-learn library demonstrates how the **term frequency-inverse document frequency** (TF-IDF) is computed for our corpus.
+However, the problem is that the high frequency does not indicate that importance of the word. Thus, the concept of **inverse-document frequency** (IDF) is introduced, as a way of multiplying the inverse fraction of the frequency of the word among the whole documents. This prevents the overestimation of the functional words in many cases; to be honest, 'I' and 'you' are not as important as 'love', 'want' and 'need'. For instance, in the morpheme-based analysis, many particles in Korean are used repetitively in the sentences; those will be assigned a low IDF so that the lexical words are emphasized alternatively. The following code utilizing the scikit-learn library demonstrates how the **term frequency-inverse document frequency** (TF-IDF) is computed for our corpus.
 
 ```python
 # Referred to the followings for the code:
@@ -196,10 +196,10 @@ fci_tfidf_bi_test  = fci_tfidf_bi[len_train:]
 
 * 그래서 우리가 생각해볼 수 있는 건 '다른 문장들에도 많이 나오는 녀석엔 가중치를 조금 주면 어떨까?'하는 것입니다. 예컨대 전체 문장 중 해당 문장이 나오는 비율의 역수 같은 걸 곱해준다면? 이런 생각으로 나온 녀석이 바로 inverse document frequency입니다. 약간의 smoothing factor을 추가하자면, test corpus에 해당 term이 없는 경우를 대비해 분모에 1을 더해주고, corpus size가 방대해질 때를 고려해 log를 입히는 정도?
 
-* 상기한 두 개의 요소를 곱해 BoW를 개량한 모델이 바로 TF-IDF (term frequency-inverse document frequency) 입니다. 문서 분류에 아직도 활발히 사용되는 모델이지요. 
+* 상기한 두 개의 요소를 곱해 BoW를 개량한 모델이 바로 TF-IDF (term frequency-inverse document frequency) 입니다. 문서 분류에 아직도 활발히 사용되는 모델이지요. 위의 코드에서 *tfidf_vectorizer* 함수는 train corpus에서 tf-idf statistics를 뽑아내고 이를 이용해 train corpus+test corpus를 수치화하는 과정을 담고 있습니다. statistics를 뽑아낼 때 train corpus만 사용하는 것은, test corpus까지 되면 prediction의 본래 의미에 맞지 않게 되기 때문이죠. 수치화하는 과정은 이 statistics를 이용하여 *fit_transform*의 함수를 통해 일괄적으로 진행됩니다.
 
 ---
-> The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; the accuracy refers to the fraction of correct instances out of the whole data. Understanding the meaning of the value is intuitive, but the flaw is that it does not convey how incorrect the model predicts for the class of data with a small portion. For example, if the data consists of the binary label and the portion is 9:1 yielding an imbalance, then the accuracy may reach 90% just by a simple guess of a class with the larger volume. The better solution can be obtained by using F1-score, which considers the true negatives and the false positives. The following code displays how the sparse vectors we previously obtained are trained and predicted, with both an accuracy and an F1-score.
+The aforementioned sentence representation can be directly utilized with the basic classifiers such as naive Bayes (NB), decision tree (DT), support vector machine (SVM) and logistic regression (LR). The evaluation is done with accuracy and F1-score; the accuracy refers to the fraction of correct instances out of the whole data. Understanding the meaning of the value is intuitive, but the flaw is that it does not convey how incorrect the model predicts for the class of data with a small portion. For example, if the data consists of the binary label and the portion is 9:1 yielding an imbalance, then the accuracy may reach 90% just by a simple guess of a class with the larger volume. The better solution can be obtained by using F1-score, which considers the true negatives and the false positives. The following code displays how the sparse vectors we previously obtained are trained and predicted, with both an accuracy and an F1-score.
 
 ```python
 from sklearn.linear_model import LogisticRegression
@@ -266,12 +266,12 @@ precision_recall_fscore_support(bi_pred,fci_label_test)
 
 ## 4. Dense word embeddings
 
-> Three-line summary:</br>
-> 1. Computational linguistics aims making machines understand human language.</br>
-> 2. As a fundamental approach for the representation of word and sentence, one-hot encoding and TF-IDF are introduced.</br>
-> 3. For Korean, due to the property of agglutinative language, morpheme-based analysis can be more effective than the word (*eojeol*)-based one.</br>
+Three-line summary:</br>
+1. Computational linguistics aims making machines understand human language.</br>
+2. As a fundamental approach for the representation of word and sentence, one-hot encoding and TF-IDF are introduced.</br>
+3. For Korean, due to the property of agglutinative language, morpheme-based analysis can be more effective than the word (*eojeol*)-based one.</br>
 
-> However, considering the computation issue which has been very important up to this date, the sparse representations may not be the optimal solution for the contemporary neural network-based systems. This is the point where the dense representation such as [*Word2Vec*](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) is successfully adopted.
+However, considering the computation issue which has been very important up to this date, the sparse representations may not be the optimal solution for the contemporary neural network-based systems. This is the point where the dense representation such as [*Word2Vec*](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) is successfully adopted.
 
 * 여태까지 한 내용을 세줄요약해 보면 다음과 같습니다.</br>
 1. 전산언어학은 기계로 하여금 사람 말을 잘 알아먹도록 하는 학문</br>
