@@ -40,6 +40,7 @@ The next version will incoporate much more utterances and will be treated as a s
 [8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
 [9. Concatenation of CNN and RNN layers](https://github.com/warnikchow/dlk2nlp#9-concatenation-of-cnn-and-rnn-layers)</br>
 [10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)
+[11. BERT and after](https://github.com/warnikchow/dlk2nlp#11-bert-and-after)
 
 ## 0. Corpus labeling
 The most annoying and confusing process. Annotation guideline should be provided to annotators, and more than two natives should be engaged in to make the labeling reliable and also for computation of inter-annotator agreement (IAA). In this project, multi-class (7) annotation of short Korean utterances is utilized.
