@@ -865,6 +865,7 @@ For the first approach, the most simple way is to spread a character into three 
 In this tutorial, we present two conventional methodologies in one-hot encoding, namely [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) and [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227). The former is a simple 67-dim version, and the latter considers the cases where the alphabets are used solely (e.g., 'ㅠㅠ', 'ㅋㅋ'), not in a form of block. Each corresponds with *shin_onehot* and *cho_onehot* in the code below.
 
 ```python
+import hgtk
 from hgtk.letter import decompose as decom
 
 choseng = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','ㄲ','ㄸ','ㅃ','ㅆ','ㅉ']
@@ -938,23 +939,6 @@ kor_char = np.load('kor_char.npy').item()
 
 ---
 
-The last approach we can think of is, enhancing the methodologies of alphabet encoding. The conciseness of alphabet embedding is desirable but they lack in the property of complete blocks. Then, what if the one-hot vectors for CV(C)s are merged together? To this end, we've recently proposed a multi-hot encoding scheme that can embed any form of *Hangul* character (or sole alphabet) into 1,2 or 3-hot vector. It preserves the full character blocks and also is efficient in computation (in view of feature dimension). 
-
-<p align="center">
-    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/char2.PNG" width="400"><br/>
-    (A concise description on the proposed encoding scheme - from a patent document)
-
-```python
-def char2onehot(s):
-    z = decom(s)
-    res = np.concatenate([cho2onehot(z[0]),cwu2onehot(z[1]),con2onehot(z[2])])
-    return res
-```
-
-* 마지막으로 생각해볼 수 있는 음절 임베딩 방법은, 자소분리의 방법을 개량하는 것입니다. 자소분리 one-hot encoding의 장점은 저차원의 벡터로 표현할 수 있지만 음절 특성이 사라지고 byte 활용이 비효율적이라는 단점이 있었고, 음절 기반 encoding은 subword information을 활용할 수 있지만 별도의 pretrained vector dictionary가 필요하거나 feature size가 과도하게 커진다는 단점이 있었죠. 이들을 보완하기 위해, 전자로부터 conciseness라는 특성을 가져오고, 후자로부터 subword information을 가져오는 방식으로, 초/중/종성에 해당하는 one-hot vector들을 merge하여 그림처럼 multi-hot encoded sparse vector을 만드는 방법을 생각해볼 수 있겠습니다. 이것저것 해보다가 시도해 본 방법이었는데 생각보다 성능이 괜찮아서 특허로도 내었고 현재 논문 review 중에 있습니다 ㅎㅎ 리뷰어님들이 여기까지 와서 번역기를 돌려보고 쿠사리를 먹이지는 않겠죠...? 여튼 나름 뿌듯해서 하나의 꼭지로 쓰게 되었습니다.
-
----
-
 The aforementioned methodologies are implemented in the following code as a featurization for RNN. Since the number of morphemes are generally smaller than the number of characters we've fixed the max character length to 80. Consequently, the sequence length for the alphabet embeddings (Shin & Cho) reaches 240. Again, to reflect the head-finality of Korean, the alphabets/characters are padded from the sentence-final.
 
 ```python
@@ -976,7 +960,7 @@ def featurize_rnnchar(corpus,wdim,chardict,maxlen):
                 else:
                     rnn_shin[i][-3*j-3:,:] = np.transpose(shin_onehot(s[-j-1]))
                     rnn_cho[i][-3*j-3:,:] = np.transpose(cho_onehot(s[-j-1]))
-                rnn_char[i][-j-1,:] = char2onehot(s[-j-1])
+                #rnn_char[i][-j-1,:] = char2onehot(s[-j-1])
                 if s[-j-1] in model_ft:
                     rnn_total[i][-j-1,:] = model_ft[s[-j-1]]
                 if s[-j-1] in chardict:
@@ -986,7 +970,180 @@ def featurize_rnnchar(corpus,wdim,chardict,maxlen):
 fci_rec_shin, fci_rec_cho, fci_rec_char, fci_rec_onehot, fci_rec = featurize_rnnchar(fci_data,100,kor_char,80)
 ```
 
-* 앞서 얘기한 character embedding 방법론들이 RNN featurization의 형태로 정리된 코드입니다. 각각 Shin, Cho, dense char embedding, one-hot encoded char embedding, 그리고 multi-hot char embedding (proposed)을 output으로 합니다. 보통 형태소의 개수보다 음절 개수가 훨씬 많기 때문에 길이는 80으로 하였고, 이 과정에서 space도 하나의 character로 카운트됩니다. 자소분리 임베딩의 경우 3배의 길이를 가지는 것으로 간주하여 size 240을 최대로 하였습니다. 그리고 앞에서 그랬듯, 한국어의 head-finality를 고려하여 문장 뒷쪽에서부터 padding하였습니다.
+* 앞서 얘기한 character embedding 방법론들이 RNN featurization의 형태로 정리된 코드입니다. 각각 Shin, Cho, 어떤 비밀 알고리즘 (?), one-hot encoded char embedding, 그리고 dense char embedding 을 output으로 합니다. 보통 형태소의 개수보다 음절 개수가 훨씬 많기 때문에 길이는 80으로 하였고, 이 과정에서 space도 하나의 character로 카운트됩니다. 자소분리 임베딩의 경우 3배의 길이를 가지는 것으로 간주하여 size 240을 최대로 하였습니다. 그리고 앞에서 그랬듯, 한국어의 head-finality를 고려하여 문장 뒷쪽에서부터 padding하였습니다. 비밀 알고리즘은 조만간 또 말씀드릴 일이 있을 것 같아요!
+
+---
+
+The below is the evaluation phase utilizing the case of dense character embedding, which is the best case among Shin, the one-hot encoded-char and the dense. Since the feature size is much bigger than the morpheme-based models, training epoch was extended to 50 for a fair comparison. The convergence was significantly slow compared with the morpheme-based cases, but we've obtained compatible accuracy (0.8802 > 0.8823) and F1 score (0.7906 > 0.7934) with respect to the performance with the morpheme-bilstm model. We assume that this result originates in the property of the syllables in Korean as subwords and the nature of the intention understanding task as a syntax-semantic task. Advanced from the vanilla models we've utilized so far, we may customize some Keras layers in the following chapter, to boost the performance.
+
+```python
+validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,0.1,16,'model/tutorial/rec_char_dense')
+```
+
+```properties
+# CONSOLE RESULT
+>>> validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,0.1,16,'model/tutorial/rec_char_dense')
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+bidirectional_12 (Bidirectio (None, 64)                34048     
+_________________________________________________________________
+dense_43 (Dense)             (None, 128)               8320      
+_________________________________________________________________
+dense_44 (Dense)             (None, 7)                 903       
+=================================================================
+Total params: 43,271
+Trainable params: 43,271
+Non-trainable params: 0
+_________________________________________________________________
+Train on 55129 samples, validate on 6126 samples
+Epoch 1/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.6033 - acc: 0.7970— val_f1: 0.611853 — val_precision: 0.759945 — val_reca
+— val_f1_w: 0.805877 — val_precision_w: 0.822164 — val_recall_w: 0.821907
+55129/55129 [==============================] - 169s 3ms/step - loss: 0.6034 - acc: 0.7970 - val_loss: 0.5275 - val_acc: 0.8219
+Epoch 2/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.4744 - acc: 0.8399— val_f1: 0.694396 — val_precision: 0.770346 — val_reca
+— val_f1_w: 0.834075 — val_precision_w: 0.840706 — val_recall_w: 0.840679
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.4743 - acc: 0.8399 - val_loss: 0.4752 - val_acc: 0.8407
+Epoch 3/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.4298 - acc: 0.8538— val_f1: 0.735305 — val_precision: 0.779485 — val_reca
+— val_f1_w: 0.851305 — val_precision_w: 0.851509 — val_recall_w: 0.855534
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.4298 - acc: 0.8538 - val_loss: 0.4277 - val_acc: 0.8555
+Epoch 4/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.4013 - acc: 0.8632— val_f1: 0.743459 — val_precision: 0.793688 — val_reca
+— val_f1_w: 0.850187 — val_precision_w: 0.859941 — val_recall_w: 0.854228
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.4012 - acc: 0.8632 - val_loss: 0.4334 - val_acc: 0.8542
+Epoch 5/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3808 - acc: 0.8699— val_f1: 0.759329 — val_precision: 0.791125 — val_reca
+— val_f1_w: 0.862013 — val_precision_w: 0.863887 — val_recall_w: 0.864838
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.3809 - acc: 0.8699 - val_loss: 0.4008 - val_acc: 0.8648
+Epoch 6/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3639 - acc: 0.8744— val_f1: 0.772891 — val_precision: 0.818381 — val_reca
+— val_f1_w: 0.867532 — val_precision_w: 0.868421 — val_recall_w: 0.870715
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.3638 - acc: 0.8744 - val_loss: 0.3888 - val_acc: 0.8707
+Epoch 7/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3497 - acc: 0.8791— val_f1: 0.769384 — val_precision: 0.800740 — val_reca
+— val_f1_w: 0.865818 — val_precision_w: 0.866474 — val_recall_w: 0.869083
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.3496 - acc: 0.8791 - val_loss: 0.3859 - val_acc: 0.8691
+Epoch 8/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3363 - acc: 0.8844— val_f1: 0.776859 — val_precision: 0.809094 — val_reca
+— val_f1_w: 0.871162 — val_precision_w: 0.870220 — val_recall_w: 0.874306
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.3363 - acc: 0.8844 - val_loss: 0.3775 - val_acc: 0.8743
+Epoch 9/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3238 - acc: 0.8888— val_f1: 0.769087 — val_precision: 0.823962 — val_reca
+— val_f1_w: 0.871311 — val_precision_w: 0.872008 — val_recall_w: 0.874633
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.3238 - acc: 0.8888 - val_loss: 0.3690 - val_acc: 0.8746
+Epoch 10/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3147 - acc: 0.8912— val_f1: 0.778358 — val_precision: 0.815374 — val_reca
+— val_f1_w: 0.871938 — val_precision_w: 0.872361 — val_recall_w: 0.873980
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.3148 - acc: 0.8912 - val_loss: 0.3691 - val_acc: 0.8740
+Epoch 11/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3051 - acc: 0.8944— val_f1: 0.775244 — val_precision: 0.801135 — val_reca
+— val_f1_w: 0.872543 — val_precision_w: 0.872058 — val_recall_w: 0.875449
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.3051 - acc: 0.8944 - val_loss: 0.3665 - val_acc: 0.8754
+Epoch 12/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2970 - acc: 0.8981— val_f1: 0.781538 — val_precision: 0.809303 — val_reca
+— val_f1_w: 0.875536 — val_precision_w: 0.875564 — val_recall_w: 0.878387
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2970 - acc: 0.8981 - val_loss: 0.3629 - val_acc: 0.8784
+Epoch 13/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2891 - acc: 0.9001— val_f1: 0.781662 — val_precision: 0.795075 — val_reca
+— val_f1_w: 0.872933 — val_precision_w: 0.873100 — val_recall_w: 0.873817
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.2891 - acc: 0.9001 - val_loss: 0.3684 - val_acc: 0.8738
+Epoch 14/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2811 - acc: 0.9032— val_f1: 0.778117 — val_precision: 0.799786 — val_reca
+— val_f1_w: 0.873586 — val_precision_w: 0.874717 — val_recall_w: 0.875775
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.2810 - acc: 0.9032 - val_loss: 0.3671 - val_acc: 0.8758
+Epoch 15/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2744 - acc: 0.9035— val_f1: 0.784468 — val_precision: 0.810065 — val_reca
+— val_f1_w: 0.874109 — val_precision_w: 0.873767 — val_recall_w: 0.876265
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.2744 - acc: 0.9036 - val_loss: 0.3618 - val_acc: 0.8763
+Epoch 16/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2686 - acc: 0.9063— val_f1: 0.780115 — val_precision: 0.807169 — val_reca
+— val_f1_w: 0.874687 — val_precision_w: 0.874115 — val_recall_w: 0.876755
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.2687 - acc: 0.9063 - val_loss: 0.3641 - val_acc: 0.8768
+Epoch 17/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2615 - acc: 0.9094— val_f1: 0.782015 — val_precision: 0.796383 — val_reca
+— val_f1_w: 0.874941 — val_precision_w: 0.876734 — val_recall_w: 0.875939
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2616 - acc: 0.9094 - val_loss: 0.3640 - val_acc: 0.8759
+Epoch 18/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2548 - acc: 0.9099— val_f1: 0.790453 — val_precision: 0.812157 — val_reca
+— val_f1_w: 0.880186 — val_precision_w: 0.880995 — val_recall_w: 0.881815
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2548 - acc: 0.9098 - val_loss: 0.3696 - val_acc: 0.8818
+Epoch 19/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2484 - acc: 0.9136— val_f1: 0.787465 — val_precision: 0.791837 — val_reca
+— val_f1_w: 0.877686 — val_precision_w: 0.880073 — val_recall_w: 0.877245
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2484 - acc: 0.9136 - val_loss: 0.3612 - val_acc: 0.8772
+Epoch 20/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2432 - acc: 0.9150— val_f1: 0.764492 — val_precision: 0.800527 — val_reca
+— val_f1_w: 0.863816 — val_precision_w: 0.865599 — val_recall_w: 0.867124
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2431 - acc: 0.9150 - val_loss: 0.4086 - val_acc: 0.8671
+Epoch 21/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2364 - acc: 0.9179— val_f1: 0.786431 — val_precision: 0.825723 — val_reca
+— val_f1_w: 0.877461 — val_precision_w: 0.877627 — val_recall_w: 0.880346
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2364 - acc: 0.9179 - val_loss: 0.3791 - val_acc: 0.8803
+Epoch 22/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2314 - acc: 0.9198— val_f1: 0.784653 — val_precision: 0.813028 — val_reca
+— val_f1_w: 0.879205 — val_precision_w: 0.880109 — val_recall_w: 0.880999
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2314 - acc: 0.9198 - val_loss: 0.3741 - val_acc: 0.8810
+Epoch 23/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2251 - acc: 0.9218— val_f1: 0.780445 — val_precision: 0.804015 — val_reca
+— val_f1_w: 0.875199 — val_precision_w: 0.874711 — val_recall_w: 0.877897
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2251 - acc: 0.9218 - val_loss: 0.3859 - val_acc: 0.8779
+Epoch 24/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2195 - acc: 0.9240— val_f1: 0.784534 — val_precision: 0.789635 — val_reca
+— val_f1_w: 0.876094 — val_precision_w: 0.875345 — val_recall_w: 0.877081
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2195 - acc: 0.9240 - val_loss: 0.3862 - val_acc: 0.8771
+Epoch 25/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2145 - acc: 0.9252— val_f1: 0.789590 — val_precision: 0.800697 — val_reca
+— val_f1_w: 0.879318 — val_precision_w: 0.878898 — val_recall_w: 0.880346
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2145 - acc: 0.9252 - val_loss: 0.3892 - val_acc: 0.8803
+Epoch 26/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2087 - acc: 0.9281— val_f1: 0.786858 — val_precision: 0.804829 — val_reca
+— val_f1_w: 0.878004 — val_precision_w: 0.877461 — val_recall_w: 0.879693
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2087 - acc: 0.9281 - val_loss: 0.3853 - val_acc: 0.8797
+Epoch 27/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2042 - acc: 0.9290— val_f1: 0.779832 — val_precision: 0.808263 — val_reca
+— val_f1_w: 0.873661 — val_precision_w: 0.872953 — val_recall_w: 0.876755
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.2042 - acc: 0.9290 - val_loss: 0.4095 - val_acc: 0.8768
+Epoch 28/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1993 - acc: 0.9306— val_f1: 0.792366 — val_precision: 0.799918 — val_reca
+— val_f1_w: 0.881174 — val_precision_w: 0.881553 — val_recall_w: 0.881489
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1994 - acc: 0.9306 - val_loss: 0.3898 - val_acc: 0.8815
+Epoch 29/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.1939 - acc: 0.9330— val_f1: 0.787657 — val_precision: 0.799441 — val_reca
+— val_f1_w: 0.878101 — val_precision_w: 0.877934 — val_recall_w: 0.879367
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1939 - acc: 0.9330 - val_loss: 0.4101 - val_acc: 0.8794
+Epoch 30/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1895 - acc: 0.9333— val_f1: 0.767905 — val_precision: 0.779847 — val_reca
+— val_f1_w: 0.863264 — val_precision_w: 0.863594 — val_recall_w: 0.865491
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1896 - acc: 0.9332 - val_loss: 0.4535 - val_acc: 0.8655
+Epoch 31/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.1856 - acc: 0.9350— val_f1: 0.787478 — val_precision: 0.806525 — val_reca
+— val_f1_w: 0.875649 — val_precision_w: 0.874640 — val_recall_w: 0.877571
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1856 - acc: 0.9350 - val_loss: 0.4093 - val_acc: 0.8776
+Epoch 32/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1798 - acc: 0.9380— val_f1: 0.796609 — val_precision: 0.802828 — val_reca
+— val_f1_w: 0.877572 — val_precision_w: 0.877537 — val_recall_w: 0.878224
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1799 - acc: 0.9380 - val_loss: 0.4327 - val_acc: 0.8782
+Epoch 33/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1760 - acc: 0.9389— val_f1: 0.794457 — val_precision: 0.807102 — val_reca
+— val_f1_w: 0.878977 — val_precision_w: 0.879220 — val_recall_w: 0.879693
+55129/55129 [==============================] - 164s 3ms/step - loss: 0.1760 - acc: 0.9389 - val_loss: 0.4271 - val_acc: 0.8797
+Epoch 34/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1714 - acc: 0.9403— val_f1: 0.794570 — val_precision: 0.800183 — val_reca
+— val_f1_w: 0.874815 — val_precision_w: 0.875788 — val_recall_w: 0.874959
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1713 - acc: 0.9404 - val_loss: 0.4511 - val_acc: 0.8750
+Epoch 35/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1675 - acc: 0.9414— val_f1: 0.793498 — val_precision: 0.804919 — val_reca
+— val_f1_w: 0.881061 — val_precision_w: 0.881226 — val_recall_w: 0.882305
+55129/55129 [==============================] - 165s 3ms/step - loss: 0.1675 - acc: 0.9414 - val_loss: 0.4274 - val_acc: 0.8823
+```
+
+* 이제 evaluation part입니다. 그런데 다섯 개나 되는 모델의 train 결과를 모두 올리는 건 좀 무리수인 것 같네요. 그래서 결론만 말씀드리면, one-hot encoded char < Shin < dense char 의 순서로 성능이 좋습니다 ㅎㅎ 아무래도 궁금하실 dense char embedding의 트레이닝 phase만을 여기엔 업로드하도록 하겠습니다. 다른 알고리즘들은 validate_bilstm 모듈에 한번씩 돌려보면서 성능을 살펴보시면 좋을 것 같아요!
+
+* 비록 feature size의 차이로 training epoch가 좀 늘어나긴 했지만 이는 convergence를 유도하기 위함이고, converge했다는 가정 하에서 morpheme based model보다 근소하게 더 성능이 좋음을 확인할 수 있었습니다. 이는 좀 의외의 결과였는데요, morpheme-based model과 다르게 여기서는 의미에 관련된 어떤 preprocessing도 거치지 않고 raw data만을 dictionary embedding한 것이기 때문입니다. 여기서, 한국어에서는 각 음절이 어느 정도 subword 역할을 해 주며 그 sequential한 배열로부터 문장의 의도를 파악하면 형태소 단위의 분석보다 때로는 더 정확할 수 있다는 것을 짐작할 수 있습니다. 좋은 성능의 배경에는 intention understanding 이라는 task의 특징이, 그리고 한국어의 agglutinative language로써의 특징이 있겠지만요.
+
+* 지금까지 우리가 사용한 알고리즘들은 모두 vanilla cnn/bilstm이었고, 별도로 레이어를 쪼개고 합하고 곱하고 하지는 않았습니다. 하지만 back propagation을 이용한 트레이닝들의 장점은 연산의 커스터마이징이 가능하다는 점이며, 케라스에서도 그러한 연산들은 대부분 가능합니다. 다음 꼭지부터는 cnn과 bilstm을 엮어서 모델을 짜는 방법을 한번 알아보도록 하겠습니다.
 
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
