@@ -6,7 +6,7 @@
 
 ## Requirements
 #### The recommended versions are in *Requirements.txt*, but can be replaced depending on the environment
-fasttext, Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), nltk, numpy, scikit-learn, tensorflow-gpu
+fasttext (Gensim if inavailable), Keras, konlpy (refer to the [documentation](http://konlpy.org/en/v0.4.4/)), hgtk, nltk, numpy, scikit-learn, tensorflow-gpu
 #### Download [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor) and place in the folder named *vectors*. For the utilization of the dictionary, cite the following:
 ```
 @article{cho2018real,
@@ -923,7 +923,7 @@ def cho_onehot(s):
 
 * 자소 분리의 방법에 있어 가장 먼저 생각해볼 수 있는 것은 한 글자 (character)을 세 개의 자모 sequence (e.g., '각' > 'ㄱ', 'ㅏ', 'ㄱ')로 나타내는 것입니다. 이를 손쉽게 수행할 수 있는 [hgtk](https://github.com/bluedisk/hangul-toolkit)와 같은 툴킷들도 제공되고 있구요. 이러한 변환이 full character (syllabic block)의 property를 뚜렷하게 하지 못할 수 있으나, low dimension(67?)의 sparse representation을 가능하게 한다는 점에서 유용할 수 있습니다. 다만 이 과정에서 정보량이 세 배로 증가해서 computation efficiency를 떨어뜨릴 수 있다는 점은 단점이 될 수 있겠네요. 이를 해결할 수 있는 방법으로 romanized Hangul alphabets를 생각해볼 수 있겠지만, 직관적으로 어색하고 중의성을 유발할 수 있기에 여기서는 따로 다루지 않겠습니다.
 
-* 본 튜토리얼에서 다루는 one-hot encoding방법은 [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) 과 [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227)의 두 가지입니다. 전자는 앞서 말한 67-dim의 단순 임베딩이며, 후자는 자모가 단독으로 사용되는 경우들을 고려하여 unique하게 사용되는 것을 지칭하는 별도의 벡터를 augment해 줍니다. 물론 해당 논문들에서는 특수 기호들에 대한 placeholder들도 고려하지만, 3i4k데이터셋에는 punctuation이 지워져 있기 때문에 각각 67 / 118 dim을 쓰는 것으로 충분하다고 보도록 하겠습니다.
+* 본 튜토리얼에서 다루는 one-hot encoding방법은 [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) 과 [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227)의 두 가지입니다. 전자는 앞서 말한 67-dim의 단순 임베딩이며, 후자는 자모가 단독으로 사용되는 경우들을 고려하여 unique하게 사용되는 것을 지칭하는 별도의 벡터를 augment해 줍니다. 물론 해당 논문들에서는 특수 기호들에 대한 placeholder들도 고려하지만, 3i4k데이터셋에는 punctuation이 지워져 있기 때문에 각각 67/118 dim을 쓰는 것으로 충분하다고 보도록 하겠습니다.
 
 ---
 
@@ -933,15 +933,26 @@ For the second approach, a significant advantage is that we can treat the charac
 kor_char = np.load('kor_char.npy').item()
 ```
 
-* 그 다음으로 자소 분리를 하지 않고 음절을 임베딩하는 것을 생각해볼 수 있는데요, 가장 큰 장점은 일종의 subword로써의 음절의 성질을 유지할 수 있다는 점입니다. 물론 형태소가 '-ㄴ', '-ㄹ'처럼 decompose되어 나타나는 경우도 있지만, 앞서 말했듯 우리는 non-invasive한 형태소 분석기를 쓸 거니까요. 위에 언급했듯 가능한 음절 조합은 11,172개이지만 실생활에서 사용되는 가짓수는 대략 2,500개 정도이며 이는 nn classification들에서 사용했던 fastText dictionary에 존재하는 음절의 갯수가 2,534개임을 고려해 볼 때 어느 정도 타당한 주장임을 알 수 있습니다. 그래서 가장 먼저 생각해볼 수 있는 one-hot encoding 방법은 해당 dictionary에 있는 모든 음절에 번호를 매겨 사용하는 것이죠. 물론 2,534도 작은 수는 아닙니다만, 모두 사용되는지조차 알 수 없는 11,172개의 음절을 모두 가정하는 것보단 훨씬 효율적이리라 예측할 수 있지요. 해당 음절 모음은 위의 code를 통해 import할 수 있습니다.
+* 그 다음으로 자소 분리를 하지 않고 음절을 임베딩하는 것을 생각해볼 수 있는데요, 가장 큰 장점은 일종의 subword로써의 음절의 성질을 유지할 수 있다는 점입니다. 물론 형태소가 '-ㄴ', '-ㄹ'처럼 decompose되어 나타나는 경우도 있지만, 앞서 말했듯 우리는 non-invasive한 형태소 분석기를 쓸 거니까요. 위에 언급했듯 가능한 음절 조합은 11,172개이지만 실생활에서 사용되는 가짓수는 대략 2,500개 정도이며 이는 NN classification들에서 사용했던 fastText dictionary에 존재하는 음절의 갯수가 2,534개임을 고려해 볼 때 어느 정도 타당한 주장임을 알 수 있습니다. 그래서 가장 먼저 생각해볼 수 있는 one-hot encoding 방법은 해당 dictionary에 있는 모든 음절에 번호를 매겨 사용하는 것이죠. 물론 2,534도 작은 수는 아닙니다만, 모두 사용되는지조차 알 수 없는 11,172개의 음절을 모두 가정하는 것보단 훨씬 효율적이리라 예측할 수 있지요. 해당 음절 모음은 위의 code를 통해 import할 수 있습니다.
 
 * 또다른 음절 임베딩 방법으로는, 언급했던 fastText dictionary에 있는 length 1의 단어들 (음절들)의 dense embedding만 활용하는 것을 생각해볼 수 있겠습니다. 이는 2,534의 크기를 100으로 줄이면서, 음절들 간의 distributional semantics도 고려해줄 수 있기에 상당한 성능 개선이 있을 것으로 예상해볼 수 있는 방법입니다. 실제로 제가 [딥러닝 기반 띄어쓰기](https://github.com/warnikchow/ttuyssubot)에서 활용하여 어느 정도의 효과를 보았지요. 
 
 ---
 
-The last approach we can think of is, enhancing the methodologies of alphabet encoding.
+The last approach we can think of is, enhancing the methodologies of alphabet encoding. The conciseness of alphabet embedding is desirable but they lack in the property of complete blocks. Then, what if the one-hot vectors for CV(C)s are merged together? To this end, we've recently proposed a multi-hot encoding scheme that can embed any form of *Hangul* character (or sole alphabet) into 1,2 or 3-hot vector. It preserves the full character blocks and also is efficient in computation (in view of feature dimension). 
 
-* 마지막으로 생각해볼 수 있는 음절 임베딩 방법은, 자소분리의 방법을 개량하는 것입니다.
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/char2.PNG"><br/>
+    (A concise description on the proposed encoding scheme (from a patent document).)
+
+```python
+def char2onehot(s):
+    z = decom(s)
+    res = np.concatenate([cho2onehot(z[0]),cwu2onehot(z[1]),con2onehot(z[2])])
+    return res
+```
+
+* 마지막으로 생각해볼 수 있는 음절 임베딩 방법은, 자소분리의 방법을 개량하는 것입니다. 자소분리 one-hot encoding의 장점은 저차원의 벡터로 표현할 수 있지만 음절 특성이 사라지고 byte 활용이 비효율적이라는 단점이 있었고, 음절 기반 encoding은 subword information을 활용할 수 있지만 별도의 pretrained vector dictionary가 필요하거나 feature size가 과도하게 커진다는 단점이 있었죠. 이들을 보완하기 위해, 전자로부터 conciseness라는 특성을 가져오고, 후자로부터 subword information을 가져오는 방식으로, 초/중/종성에 해당하는 one-hot vector들을 merge하여 그림처럼 multi-hot encoded sparse vector을 만드는 방법을 생각해볼 수 있겠습니다. 이것저것 해보다가 시도해 본 방법이었는데 생각보다 성능이 괜찮아서 특허로 내게 되었고, 현재 논문 review 중에 있습니다 ㅎㅎ 리뷰어님들이 여기까지 와서 번역기를 돌려보고 쿠사리를 먹이지는 않겠죠...? 여튼 나름 뿌듯해서 하나의 꼭지로 쓰게 되었습니다. 억셉이 꼭 되면 좋겠네요 
 
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
