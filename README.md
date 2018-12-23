@@ -942,7 +942,7 @@ The last approach we can think of is, enhancing the methodologies of alphabet en
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/char2.PNG" width="400"><br/>
-    (A concise description on the proposed encoding scheme (from a patent document).)
+    (A concise description on the proposed encoding scheme - from a patent document)
 
 ```python
 def char2onehot(s):
@@ -951,7 +951,42 @@ def char2onehot(s):
     return res
 ```
 
-* 마지막으로 생각해볼 수 있는 음절 임베딩 방법은, 자소분리의 방법을 개량하는 것입니다. 자소분리 one-hot encoding의 장점은 저차원의 벡터로 표현할 수 있지만 음절 특성이 사라지고 byte 활용이 비효율적이라는 단점이 있었고, 음절 기반 encoding은 subword information을 활용할 수 있지만 별도의 pretrained vector dictionary가 필요하거나 feature size가 과도하게 커진다는 단점이 있었죠. 이들을 보완하기 위해, 전자로부터 conciseness라는 특성을 가져오고, 후자로부터 subword information을 가져오는 방식으로, 초/중/종성에 해당하는 one-hot vector들을 merge하여 그림처럼 multi-hot encoded sparse vector을 만드는 방법을 생각해볼 수 있겠습니다. 이것저것 해보다가 시도해 본 방법이었는데 생각보다 성능이 괜찮아서 특허로 내게 되었고, 현재 논문 review 중에 있습니다 ㅎㅎ 리뷰어님들이 여기까지 와서 번역기를 돌려보고 쿠사리를 먹이지는 않겠죠...? 여튼 나름 뿌듯해서 하나의 꼭지로 쓰게 되었습니다. 억셉이 꼭 되면 좋겠네요 
+* 마지막으로 생각해볼 수 있는 음절 임베딩 방법은, 자소분리의 방법을 개량하는 것입니다. 자소분리 one-hot encoding의 장점은 저차원의 벡터로 표현할 수 있지만 음절 특성이 사라지고 byte 활용이 비효율적이라는 단점이 있었고, 음절 기반 encoding은 subword information을 활용할 수 있지만 별도의 pretrained vector dictionary가 필요하거나 feature size가 과도하게 커진다는 단점이 있었죠. 이들을 보완하기 위해, 전자로부터 conciseness라는 특성을 가져오고, 후자로부터 subword information을 가져오는 방식으로, 초/중/종성에 해당하는 one-hot vector들을 merge하여 그림처럼 multi-hot encoded sparse vector을 만드는 방법을 생각해볼 수 있겠습니다. 이것저것 해보다가 시도해 본 방법이었는데 생각보다 성능이 괜찮아서 특허로도 내었고 현재 논문 review 중에 있습니다 ㅎㅎ 리뷰어님들이 여기까지 와서 번역기를 돌려보고 쿠사리를 먹이지는 않겠죠...? 여튼 나름 뿌듯해서 하나의 꼭지로 쓰게 되었습니다.
+
+---
+
+The aforementioned methodologies are implemented in the following code as a featurization for RNN. Since the number of morphemes are generally smaller than the number of characters we've fixed the max character length to 80. Consequently, the sequence length for the alphabet embeddings (Shin & Cho) reaches 240. Again, to reflect the head-finality of Korean, the alphabets/characters are padded from the sentence-final.
+
+```python
+def featurize_rnnchar(corpus,wdim,chardict,maxlen):
+    rnn_shin  = np.zeros((len(corpus),maxlen*3,len(alp)))
+    rnn_cho   = np.zeros((len(corpus),maxlen*3,len(alp)+len(uniquealp)))
+    rnn_char  = np.zeros((len(corpus),maxlen,len(alp)))
+    rnn_onehot= np.zeros((len(corpus),maxlen,len(chardict)))
+    rnn_total = np.zeros((len(corpus),maxlen,wdim))
+    for i in range(len(corpus)):
+        if i%1000 ==0:
+            print(i)
+        s = corpus[i]
+        for j in range(len(s)):
+            if j < maxlen and hgtk.checker.is_hangul(s[-j-1])==True:
+                if j>0:
+                    rnn_shin[i][-3*j-3:-3*j,:] = np.transpose(shin_onehot(s[-j-1]))
+                    rnn_cho[i][-3*j-3:-3*j,:] = np.transpose(cho_onehot(s[-j-1]))
+                else:
+                    rnn_shin[i][-3*j-3:,:] = np.transpose(shin_onehot(s[-j-1]))
+                    rnn_cho[i][-3*j-3:,:] = np.transpose(cho_onehot(s[-j-1]))
+                rnn_char[i][-j-1,:] = char2onehot(s[-j-1])
+                if s[-j-1] in model_ft:
+                    rnn_total[i][-j-1,:] = model_ft[s[-j-1]]
+                if s[-j-1] in chardict:
+                    rnn_onehot[i][-j-1,chardict[s[-j-1]]]=1
+    return rnn_shin, rnn_cho, rnn_char, rnn_onehot, rnn_total
+
+fci_rec_shin, fci_rec_cho, fci_rec_char, fci_rec_onehot, fci_rec = featurize_rnnchar(fci_data,100,kor_char,80)
+```
+
+* 앞서 얘기한 character embedding 방법론들이 RNN featurization의 형태로 정리된 코드입니다. 각각 Shin, Cho, dense char embedding, one-hot encoded char embedding, 그리고 multi-hot char embedding (proposed)을 output으로 합니다. 보통 형태소의 개수보다 음절 개수가 훨씬 많기 때문에 길이는 80으로 하였고, 이 과정에서 space도 하나의 character로 카운트됩니다. 자소분리 임베딩의 경우 3배의 길이를 가지는 것으로 간주하여 size 240을 최대로 하였습니다. 그리고 앞에서 그랬듯, 한국어의 head-finality를 고려하여 문장 뒷쪽에서부터 padding하였습니다.
 
 ## 9. Concatenation of CNN and RNN layers
 ## 10. BiLSTM Self-attention
