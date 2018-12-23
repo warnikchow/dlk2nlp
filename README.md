@@ -865,7 +865,6 @@ For the first approach, the most simple way is to spread a character into three 
 In this tutorial, we present two conventional methodologies in one-hot encoding, namely [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) and [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227). The former is a simple 67-dim version, and the latter considers the cases where the alphabets are used solely (e.g., 'ㅠㅠ', 'ㅋㅋ'), not in a form of block. Each corresponds with *shin_onehot* and *cho_onehot* in the code below.
 
 ```python
-import numpy as np
 from hgtk.letter import decompose as decom
 
 choseng = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','ㄲ','ㄸ','ㅃ','ㅆ','ㅉ']
@@ -942,7 +941,7 @@ kor_char = np.load('kor_char.npy').item()
 The last approach we can think of is, enhancing the methodologies of alphabet encoding. The conciseness of alphabet embedding is desirable but they lack in the property of complete blocks. Then, what if the one-hot vectors for CV(C)s are merged together? To this end, we've recently proposed a multi-hot encoding scheme that can embed any form of *Hangul* character (or sole alphabet) into 1,2 or 3-hot vector. It preserves the full character blocks and also is efficient in computation (in view of feature dimension). 
 
 <p align="center">
-    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/char2.PNG"><br/>
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/char2.PNG" width="400"><br/>
     (A concise description on the proposed encoding scheme (from a patent document).)
 
 ```python
