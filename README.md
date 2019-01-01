@@ -39,7 +39,7 @@ The next version will incoporate much more utterances and will be treated as a s
 [7. RNN (BiLSTM)-based sentence classification](https://github.com/warnikchow/dlk2nlp#7-rnn-bilstm-based-sentence-classification)</br>
 [8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
 [9. Concatenation of CNN and RNN layers](https://github.com/warnikchow/dlk2nlp#9-concatenation-of-cnn-and-rnn-layers)</br>
-[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)
+[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)</br>
 [11. BERT and after](https://github.com/warnikchow/dlk2nlp#11-bert-and-after)
 
 ## 0. Corpus labeling
