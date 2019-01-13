@@ -84,6 +84,8 @@ The most important part of Korean NLP lies in using Python 3.x. For the lower ve
 ```python
 def read_data(filename):
     with open(filename, 'r') as f:
+    # if in Window environment, use: 
+    # with open(filename, 'r',  encoding='utf-8') as f:
         data = [line.split('\t') for line in f.read().splitlines()]
     return data
     
@@ -93,6 +95,8 @@ fci_label= [int(t[0]) for t in fci]
 ```
 
 * 한국어엔 역시 Python 3.x 죠.... 2.x로 한국어 인코딩은 지옥입니다 ㅠㅠ 처음에 아주 고생했네요. 어쨌든 제일 첫 삽은 [data](https://github.com/warnikchow/3i4k/blob/master/data/fci.txt)를 로딩하고 sentence와 label들로 나누는 과정입니다. 저는 [Lucy Park님의 유명한 슬라이드](https://www.lucypark.kr/docs/2015-pyconkr.pdf)에서 처음 봤지만, 외국 NLP 튜토리얼들에도 비슷하게 나와 있습니다. 일단 data라는 폴더를 만들어서 *fci.txt* 파일을 넣어주셔야 하며, read_data로 파일을 읽어들이고 탭(\t)으로 split한 후, data와 label array로 나누게 됩니다.
+
+* Daewon Yoon님이 제기해주신 issue를 반영하여, 윈도우 환경에서 생길 수 있는 인코딩 에러를 보완하기 위해 Window environment용 코드를 병기해 두었습니다. 혹시 우분투나 리눅스가 아닌 환경에서 작업하실 경우 해당 코드를 반영해 주시면 될 것 같습니다.
 
 ---
 
