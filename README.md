@@ -305,7 +305,7 @@ The term word2Vec is very intuitive, and it converts the words, which are discre
 
 * 모든 sparse vector가 one-hot vector같이 엔트리 간 equivalence를 지니는 건 아닙니다. 오히려 희소한 케이스에 가깝죠. 가중치를 곱해준 TF-IDF만 해도, 개별 단어를 모델링하지는 않지만 어떤 분포적인 특성이 반영되게 됩니다. binary이지만 multi-hot encoding을 차용하는 [boolean distributional semantics](https://transacl.org/ojs/index.php/tacl/article/view/616)의 경우, 의미론에서 얘기하는 feature의 개념이 등장하여, taxonomy 상 상위 위계에 해당하는 단어의 embedding이 하위 위계의 단어의 embedding에 포함되게 하는 방식으로 트레이닝이 됩니다. 아마도 벡터 사이즈는 one-hot보다는 줄어들겠죠? 벡터들 간의 distance measure가 euclidean이 아닌 어떤 이산적인 개념이 된다는 건 challenging하긴 합니다만, 언어가 기본적으로 이산적인 속성을 버릴 수 없다는 생각을 갖고 있는 저로썬 매우 매력적이라는 생각을 했습니다.
 
-* 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠.  또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
+* 그렇지만 이상은 이상이고, 우리는 많은 순간 현실과 타협해야 합니다. 작은 벡터에 정보들을 우겨 넣어야 하죠. 또한 back propagation과 같은 연산을 통해 이루어지는 최신 최적화 기법들의 수혜를 받으려면, 벡터 간의 거리가 어떤 미분가능한, 이산적이지 않은 개념으로 정의가 되어야 함도 사실입니다 (물론 이산적인 목적 함수들을 위해 별도의 신경망을 연결해 주는 알고리즘도 있는 것으로 압니다만 일단 그건 나중에 생각하도록 하지요). 그러기 위해서, 고차원의 벡터를 저차원에 임베딩해 넣으면서도, 단어들 간의 관계가 좀 더 유기적으로 연결될 수 있는 방법엔 뭐가 있을까요? 
 
 * 이러한 관점에서 볼 때, word2vec은 상당히 매력적인 시도였다 볼 수 있겠습니다. 혹자는 '비슷한 context에 등장하는 녀석들은 실제로도 비슷한/관련 있는 녀석들일 가능성이 높다는 distributional semantics의 원칙을 수치적 제약으로 잘 지키면서 one-hot vector을 저차원에 pca한 결과물'이라고 하더군요. 예컨대 '너는 나쁜 아이야'와 '너는 착한 아이야'라는 문장들을 볼 때, '나쁜'과 '착한'이 실제로 저런 류의 context를 많이 공유한다 생각해 보면, 둘이 아주 관계가 없는 단어들은 아니다, 어느정도 유기적이다, 그런 판단을 할 수 있겠죠? word2vec의 큰 철학은 이렇습니다. 컨텍스트를 주고 center word를 추론하는 CBOW와 그 반대인 skip-gram (SG) 모두 word2vec의 최적화와 관련된 알고리듬인데요, SG가 여러 태스크에서 더 성능이 좋음이 보여진 바 있고 실제로도 더 자주 활용됩니다. 
 
@@ -329,7 +329,7 @@ model_ft = fasttext.load_model('vectors/model_drama.bin')
 
 * GloVe의 경우 stanford에서 제공하는 [wiki/twitter기반 pre-trained vector](https://nlp.stanford.edu/projects/glove/)가 있으며, fastText의 경우는 꽤 많은 언어로 pre-trained vector을 제공하지만 학습 속도가 굉장히 빨라 저 같은 경우는 갖고 있는 코퍼스로 새로 training하기도 합니다. Subword n-gram이 교착어인 한국어에도 굉장히 유용하여, 저 같은 경우는 fastText로 트레이닝된 word vector set을 character embedding에 사용하고 있구요. 약 200만 문장의 드라마 스크립트를 통해 학습한 word vector dictionary는 [다음의 주소](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor)에서 제공됩니다. [fasttext 라이브러리](https://pypi.org/project/fasttext/0.8.3/)를 이용해 bin 파일을 바로 load할 수 있으며, 설치가 잘 되지 않을 경우 Gensim의 FastText wrapper을 이용해 비슷한 방식으로 load가 가능합니다.
 
-* 앞서도 말했지만, 26개의 알파벳만 있으면 되는 영어와 달리, 한국어는 2500개 상당의 자모 조합이 있어 one-hot encoding을 직접적으로 character embedding에 사용하기 쉽지 않죠. 이럴 때 유용하게 사용할 수 있는 것이 저차원으로 임베딩된 character vector입니다. 어느 정도 분포적인 특징을 반영할 수 있으면서도 computational하게 부담을 덜 줄 수 있는 그런 feature로 사용할 수 있는 것입니다. 물론 형태소, 어절 모두 임베딩의 대상이 될 수 있습니다. 어떤 것을 선택할지는 형태소 분석기의 유무, 구동 및 개발 환경 등에 따라 자유롭게 선택하면 될 것입니다. 
+* 앞서도 말했지만, 26개의 letter로 된 알파벳만 있으면 되는 영어와 달리, 한국어는 2500개 상당의 자모 조합이 있어 one-hot encoding을 직접적으로 character embedding에 사용하기 쉽지 않죠. 이럴 때 유용하게 사용할 수 있는 것이 저차원으로 임베딩된 character vector입니다. 어느 정도 분포적인 특징을 반영할 수 있으면서도 computational하게 부담을 덜 줄 수 있는 그런 feature로 사용할 수 있는 것입니다. 물론 형태소, 어절 모두 임베딩의 대상이 될 수 있습니다. 어떤 것을 선택할지는 형태소 분석기의 유무, 구동 및 개발 환경 등에 따라 자유롭게 선택하면 될 것입니다. 
 
 ## 5. Document vectors and NN classifier
 
@@ -853,7 +853,7 @@ Due to the distinguished writing style, the embedding of Korean letters *Hangul*
 
 To be specific, The alphabets comprise the morpho-syllabic blocks (characters) that are equal to the phonetic unit of the syllable, in the conjunct form of Syllable: CV(C). This notation implies that there should be at least one consonant (namely *cho-seng*, the first sound) and one vowel (namely *cwung-seng*, the second sound). An additional consonant (namely *cong-seng*, the third sound) is auxiliary. However, usually in the character decomposition, three slots are fully held for each component; an empty cell comes for the third entry if there is no auxiliary consonant. The number of the possible alphabets, or (composite) consonants/vowels, that can come for each slot is 19, 21, and 27. For instance, in a character '각 (*kak*)', three clock-wisely arranged alphabets ㄱ, ㅏ, and ㄱ sound *k*, *a*, and *k*, respectively.
 
-* 앞서 말했듯, 한국어의 writing system은 자연발생된 것이 아닌 단체 (거진 개인)에 의해 창조되었다는 점에서 매우 특별하며, 어떤 음절에 해당하는 morpho-syllabic block을 decompose하여 그 음절을 이루는 소리 성분들에 해당하는 alphabet, 즉 자모를 알아낼 수 있다는 점에서도 독특합니다.
+* 앞서 말했듯, 한국어의 writing system은 자연발생된 것이 아닌 단체 (거진 개인)에 의해 창조되었다는 점에서 매우 특별하며, 어떤 음절에 해당하는 morpho-syllabic block을 decompose하여 그 음절을 이루는 소리 성분들에 해당하는 sub-character, 즉 자모를 알아낼 수 있다는 점에서도 독특합니다.
 
 * 좀 더 자세히 얘기하자면 한글은 CV(C)의 conjunct form으로 되어 있으며, 이는 한 음절을 구성하기 위해 최소한 자모 한 개씩은 있어야 함을 의미합니다. 이는 초성과 중성이라고 불리며, CV를 지칭하죠. 종성, 즉 third sound (C)의 경우는, 있어도 되고 없어도 상관없습니다. 초성으로 가능한 자음은 19개, 중성으로 가능한 모음은 21개이며, 종성으로 가능한 자음은 composite consonants를 포함하여 27개입니다 (empty일 경우 포함하면 28개).
 
@@ -861,7 +861,7 @@ To be specific, The alphabets comprise the morpho-syllabic blocks (characters) t
 
 For a clearness, let's denote the morpho-syllabic blocks as *characters* and the consonants/vowels as *alphabets*. The description above yields total 11,172 possible characters. However, one-hot encoding those combinations into 11,172-dim vector seems very redundant at a glance. Therefore, there have been various character encoding schemes suggested. The schemes include two approaches; (1) decomposing the blocks into alphabets and (2) preserving them.
 
-* 보다 논의를 명확히 하기 위해, 음절들을 character라고 하고 자모를 alphabets라고 둡시다. 위의 설명에 따르면 우리는 총 11,172개의 가능한 자모 조합을 얻는데, 이를 one-hot encoding하는 것은 매우 costly해 보이기도 하거니와 그에 따른 merit을 딱히 찾기도 어렵습니다. 따라서 이 문제에 대하여 한국어 character을 encoding하는 다양한 방법들이 소개되었는데, 이 방법들은 크게 1) 자소 분리 2) 음절 유지의 두 가지로 나뉠 수 있습니다.
+* 보다 논의를 명확히 하기 위해, 음절들을 character라고 하고 자모를 Jamo라고 둡시다. 위의 설명에 따르면 우리는 총 11,172개의 가능한 자모 조합을 얻는데, 이를 one-hot encoding하는 것은 매우 costly해 보이기도 하거니와 그에 따른 merit을 딱히 찾기도 어렵습니다. 따라서 이 문제에 대하여 한국어 character을 encoding하는 다양한 방법들이 소개되었는데, 이 방법들은 크게 1) 자소 분리 2) 음절 유지의 두 가지로 나뉠 수 있습니다.
 
 ---
 
@@ -926,7 +926,7 @@ def cho_onehot(s):
     return res
 ```
 
-* 자소 분리의 방법에 있어 가장 먼저 생각해볼 수 있는 것은 한 글자 (character)을 세 개의 자모 sequence (e.g., '각' > 'ㄱ', 'ㅏ', 'ㄱ')로 나타내는 것입니다. 이를 손쉽게 수행할 수 있는 [hgtk](https://github.com/bluedisk/hangul-toolkit)와 같은 툴킷들도 제공되고 있구요. 이러한 변환이 full character (syllabic block)의 property를 뚜렷하게 하지 못할 수 있으나, low dimension(67?)의 sparse representation을 가능하게 한다는 점에서 유용할 수 있습니다. 다만 이 과정에서 정보량이 세 배로 증가해서 computation efficiency를 떨어뜨릴 수 있다는 점은 단점이 될 수 있겠네요. 이를 해결할 수 있는 방법으로 romanized Hangul alphabets를 생각해볼 수 있겠지만, 직관적으로 어색하고 중의성을 유발할 수 있기에 여기서는 따로 다루지 않겠습니다.
+* 자소 분리의 방법에 있어 가장 먼저 생각해볼 수 있는 것은 한 글자 (character)을 세 개의 자모 sequence (e.g., '각' > 'ㄱ', 'ㅏ', 'ㄱ')로 나타내는 것입니다. 이를 손쉽게 수행할 수 있는 [hgtk](https://github.com/bluedisk/hangul-toolkit)와 같은 툴킷들도 제공되고 있구요. 이러한 변환이 full character (syllabic block)의 property를 뚜렷하게 하지 못할 수 있으나, low dimension(67?)의 sparse representation을 가능하게 한다는 점에서 유용할 수 있습니다. 다만 이 과정에서 정보량이 세 배로 증가해서 computation efficiency를 떨어뜨릴 수 있다는 점은 단점이 될 수 있겠네요. 이를 해결할 수 있는 방법으로 romanized Hangul을 생각해볼 수 있겠지만, 직관적으로 어색하고 중의성을 유발할 수 있기에 여기서는 따로 다루지 않겠습니다.
 
 * 본 튜토리얼에서 다루는 one-hot encoding방법은 [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) 과 [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227)의 두 가지입니다. 전자는 앞서 말한 67-dim의 단순 임베딩이며, 후자는 자모가 단독으로 사용되는 경우들을 고려하여 unique하게 사용되는 것을 지칭하는 별도의 벡터를 augment해 줍니다. 물론 해당 논문들에서는 특수 기호들에 대한 placeholder들도 고려하지만, 3i4k데이터셋에는 punctuation이 지워져 있기 때문에 각각 67/118 dim을 쓰는 것으로 충분하다고 보도록 하겠습니다.
 
