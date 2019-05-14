@@ -587,7 +587,7 @@ This kind of sentence encoding gives us quite a rich representation of the sente
 
 ---
 
-However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Different from the previous approaches which incorporate all the words in the sentence into a single vector, the featurization for CNN has its limitation in the volume. Thus, hereby we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we've decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
+However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Unlike the previous approach where all the information of the words in the sentence are aggregated into a single vector, the featurization for CNN has its limitation in the volume. Thus, here we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
 
 ```python
 def featurize_cnn(corpus,wdim,maxlen):
@@ -614,7 +614,7 @@ fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 ---
 
-There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however the sentence classification does not require such deep and wide networks. The specification used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
+There are so many types of convolutional networks out there (LeNet, AlexNet, VGG, YOLO ...), however such deep and wide networks might not be required for the sentence classification. The model architecture used for the implementation is quite simple; two convolutional layers with the window width 3 and a max pooling layer between with the size (2,1). For the first conv-layer, the window size is (3,100) and for the second (3,1), since the information was abstracted and max-pooled to make up a single vector.
 
 ```python
 def validate_cnn(result,y,filters,hidden_dim,cw,filename):
@@ -643,7 +643,7 @@ validate_cnn(fci_conv,fci_label,32,128,class_weights_fci,'model/tutorial/conv')
 
 ---
 
-The result is encouraging! Although there was a little improvement in F1 score, we had about a 20% RRER for the accuracy (regarding the model with the best performance). The CNN-based featurization and classification of the sentence shows quite satisfactory result with a very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
+The result is encouraging! Although there was a little improvement in F1 score, we had about 20% RRER for the accuracy (regarding the model with the best performance). The CNN-based featurization and classification of the sentence shows quite satisfactory result with very fast training. However, the architecture does not seem to still convey the correlation between the non-consecutive components. The recurrent neural network covers such characteristics, with a sequence-based approach.
 
 ```properties
 # CONSOLE RESULT
@@ -708,7 +708,7 @@ Epoch 8/30
 
 ## 7. RNN (BiLSTM)-based sentence classification
 
-**Recurrent neural network (RNN)**, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to the high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [**long short-term memory (LSTM)**](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).
+**Recurrent neural network (RNN)**, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [**long short-term memory (LSTM)**](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/rnn.jpg" width="700"><br/>
@@ -758,7 +758,7 @@ validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,'model/tutorial/rec')
 
 ---
 
-We obtained another boost in performance, especially very high in F1 score. This implies that our task which deals with the intention of Korean sentences is largely influenced by the word order. This may have been an important factor in identifying the rhetoricalness, for instance, '뭐 해 지금 (what / do / now, *what (on earth) are you doing now*)' sounds much more rhetorical than '지금 뭐 해 (now / what / do, *what are you doing now*)', in view of native. However, so far we've conducted the experiments given the morpheme decomposition. Will the real semantics NOT be embedded in the characters? Well, before that, how should **character** be defined in Korean, which has distinguished morpho-syllabic blocks (which are different from alphabets) as a unit of character? 
+We obtained another boost in performance, especially very high in F1 score. This implies that our task which deals with the intention of Korean sentences is largely influenced by the word order. This may have been an important factor in identifying the rhetoricalness, for instance, '뭐 해 지금 (what / do / now, *what (on earth) are you doing now*)' sounds much more rhetorical than '지금 뭐 해 (now / what / do, *what are you doing now*)', in view of native. However, so far we've conducted the experiments given the morpheme-level decomposition. Will the real semantics NOT be embedded in the characters? Well, before that, how should **character** be defined in Korean, which has distinguished morpho-syllabic blocks (which are different from alphabets) as a unit of character? 
 
 ```properties
 # CONSOLE RESULT
@@ -847,9 +847,9 @@ Epoch 16/50
 
 ## 8. Character embedding
 
-Due to the distinguished writing style, the embedding of Korean letters *Hangul* is difficult even from its definition. For many Romanian or German langauges, latin alphabets are utilized as the characters and have been widely used in region of text analysis since [Zhang, 2015](http://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classifica). However, for Korean, the morpho-syllabic blocks that represent the syllables, can be decomposed into *jamo*, the letters or alphabets of Korean.
+Due to the distinguished writing style, the embedding of Korean letters *Hangul* is difficult even from its definition. For many Romanian or German langauges, the letters of latin alphabet are utilized as character and thereby character-level embeddding has been widely used in the region of text analysis since [Zhang, 2015](http://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classifica). However, for Korean, the morpho-syllabic blocks that represent the syllables, can be decomposed into *jamo*, the alphabet of the Korean writing system.
 
-To be specific, The alphabets comprise the morpho-syllabic blocks (characters) that are equal to the phonetic unit of the syllable, in the conjunct form of Syllable: CV(C). This notation implies that there should be at least one consonant (namely *cho-seng*, the first sound) and one vowel (namely *cwung-seng*, the second sound). An additional consonant (namely *cong-seng*, the third sound) is auxiliary. However, usually in the character decomposition, three slots are fully held for each component; an empty cell comes for the third entry if there is no auxiliary consonant. The number of the possible alphabets, or (composite) consonants/vowels, that can come for each slot is 19, 21, and 27. For instance, in a character '각 (*kak*)', three clock-wisely arranged alphabets ㄱ, ㅏ, and ㄱ sound *k*, *a*, and *k*, respectively.
+To be specific, The letters of alphabet make up the morpho-syllabic blocks (characters) that are equal to the phonetic unit of the syllable, in the conjunct form of Syllable: CV(C). This notation implies that there should be at least one consonant (namely *cho-seng*, the first sound) and one vowel (namely *cwung-seng*, the second sound). An additional consonant (namely *cong-seng*, the third sound) is auxiliary. However, usually in the character decomposition, three slots are fully held for each component; an empty cell comes for the third entry if there is no auxiliary consonant. The number of the possible letters, or (composite) consonants/vowels, that can come for each slot is 19, 21, and 27. For instance, in a character '각 (*kak*)', three clock-wisely arranged alphabets ㄱ, ㅏ, and ㄱ, each sounds *k*, *a*, and *k* respectively.
 
 * 앞서 말했듯, 한국어의 writing system은 자연발생된 것이 아닌 단체 (거진 개인)에 의해 창조되었다는 점에서 매우 특별하며, 어떤 음절에 해당하는 morpho-syllabic block을 decompose하여 그 음절을 이루는 소리 성분들에 해당하는 sub-character, 즉 자모를 알아낼 수 있다는 점에서도 독특합니다.
 
@@ -857,15 +857,15 @@ To be specific, The alphabets comprise the morpho-syllabic blocks (characters) t
 
 ---
 
-For a clearness, let's denote the morpho-syllabic blocks as *characters* and the consonants/vowels as *alphabets*. The description above yields total 11,172 possible characters. However, one-hot encoding those combinations into 11,172-dim vector seems very redundant at a glance. Therefore, there have been various character encoding schemes suggested. The schemes include two approaches; (1) decomposing the blocks into alphabets and (2) preserving them.
+For a clearness, let's denote the morpho-syllabic blocks as *characters* and the consonants/vowels as *Jamo*. The description above yields total 11,172 possible characters. However, one-hot encoding those combinations into 11,172-dim vector seems very redundant at a glance. Therefore, there have been various character encoding schemes suggested. The schemes include two approaches; (1) decomposing the blocks into sub-characters and (2) preserving them.
 
 * 보다 논의를 명확히 하기 위해, 음절들을 character라고 하고 자모를 Jamo라고 둡시다. 위의 설명에 따르면 우리는 총 11,172개의 가능한 자모 조합을 얻는데, 이를 one-hot encoding하는 것은 매우 costly해 보이기도 하거니와 그에 따른 merit을 딱히 찾기도 어렵습니다. 따라서 이 문제에 대하여 한국어 character을 encoding하는 다양한 방법들이 소개되었는데, 이 방법들은 크게 1) 자소 분리 2) 음절 유지의 두 가지로 나뉠 수 있습니다.
 
 ---
 
-For the first approach, the most simple way is to spread a character into three alphabet sequence. There are some toolkits (e.g., [hgtk](https://github.com/bluedisk/hangul-toolkit)) that decompose Hangul characters into alphabets; by utilizing them, we can obtain the tuple ('ㄱ', 'ㅏ', 'ㄱ') from a single character '각'. This blurs the property of full characters but allows a sparse representation with low dimensional vectors (of size 67). However note that the total length of numericalization increases since the sole alphabets ('ㄱ' and 'ㅏ') and the characters ('각') are assigned equally two bytes. Due to this, a degrade in computation efficiency is inavoidable. To deal with this, a romanization has been suggested and showed a good performance, but here we don't utilize it since the processing is intuitively awkward and may induce anambiguity. 
+For the first approach, the most simple way is to spread a character into three alphabet sequence. There are some toolkits (e.g., [hgtk](https://github.com/bluedisk/hangul-toolkit)) that decompose Hangul characters into alphabets; by utilizing them, we can obtain the tuple ('ㄱ', 'ㅏ', 'ㄱ') from a single character '각'. This blurs the property of full characters but allows a sparse representation with low dimensional vectors (of size 67). However note that the total length of numericalization increases since the sole alphabets ('ㄱ' and 'ㅏ') and the characters ('각') are assigned equally two bytes. Due to this, degrade in computation efficiency is inavoidable. To deal with this, [romanization has been suggested and showed a good performance](https://arxiv.org/abs/1708.02657), but here we don't utilize it since the processing may induce an ambiguity. 
 
-In this tutorial, we present two conventional methodologies in one-hot encoding, namely [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) and [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227). The former is a simple 67-dim version, and the latter considers the cases where the alphabets are used solely (e.g., 'ㅠㅠ', 'ㅋㅋ'), not in a form of block. Each corresponds with *shin_onehot* and *cho_onehot* in the code below.
+In this tutorial, we present two conventional methodologies in one-hot encoding, namely [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) and [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227). The former is a simple 67-dim version, and the latter considers the cases where the alphabets are used solely (e.g., 'ㅠㅠ', 'ㅋㅋ'), not in a form of block. Each corresponds with *shin_onehot* and *cho_onehot* in the code below. A description on *char2onehot* will be provided afterwards.
 
 ```python
 import hgtk
@@ -922,15 +922,22 @@ def cho_onehot(s):
     else:
         res[len(alp):,2] = uni2onehot(s)
     return res
+    
+def char2onehot(s):
+    z = decom(s)
+    res = np.concatenate([cho2onehot(z[0]),cwu2onehot(z[1]),con2onehot(z[2])])
+    return res
 ```
 
 * 자소 분리의 방법에 있어 가장 먼저 생각해볼 수 있는 것은 한 글자 (character)을 세 개의 자모 sequence (e.g., '각' > 'ㄱ', 'ㅏ', 'ㄱ')로 나타내는 것입니다. 이를 손쉽게 수행할 수 있는 [hgtk](https://github.com/bluedisk/hangul-toolkit)와 같은 툴킷들도 제공되고 있구요. 이러한 변환이 full character (syllabic block)의 property를 뚜렷하게 하지 못할 수 있으나, low dimension(67?)의 sparse representation을 가능하게 한다는 점에서 유용할 수 있습니다. 다만 이 과정에서 정보량이 세 배로 증가해서 computation efficiency를 떨어뜨릴 수 있다는 점은 단점이 될 수 있겠네요. 이를 해결할 수 있는 방법으로 romanized Hangul을 생각해볼 수 있겠지만, 직관적으로 어색하고 중의성을 유발할 수 있기에 여기서는 따로 다루지 않겠습니다.
 
-* 본 튜토리얼에서 다루는 one-hot encoding방법은 [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) 과 [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227)의 두 가지입니다. 전자는 앞서 말한 67-dim의 단순 임베딩이며, 후자는 자모가 단독으로 사용되는 경우들을 고려하여 unique하게 사용되는 것을 지칭하는 별도의 벡터를 augment해 줍니다. 물론 해당 논문들에서는 특수 기호들에 대한 placeholder들도 고려하지만, 3i4k데이터셋에는 punctuation이 지워져 있기 때문에 각각 67/118 dim을 쓰는 것으로 충분하다고 보도록 하겠습니다.
+* 본 튜토리얼에서 다루는 one-hot encoding방법은 [Shin](https://www.dbpia.co.kr/Journal/ArticleDetail/NODE07207314#) 과 [Cho](http://www.dbpia.co.kr/Journal/ArticleDetail/NODE07503227)의 두 가지입니다. 전자는 앞서 말한 67-dim의 단순 임베딩이며, 후자는 자모가 단독으로 사용되는 경우들을 고려하여 unique하게 사용되는 것을 지칭하는 별도의 벡터를 augment해 줍니다. 물론 해당 논문들에서는 특수 기호들에 대한 placeholder들도 고려하지만, 3i4k데이터셋에는 punctuation이 지워져 있기 때문에 각각 67/118 dim을 쓰는 것으로 충분하다고 보도록 하겠습니다. *char2onehot*에 대한 설명은 다음 단락에서 이어가도록 하겠습니다.
 
 ---
 
-For the second approach, a significant advantage is that we can treat the characters as a subword, which can be detered in the previous approach. Theoretically we can utilize 11,172 characters as a syllable, but in real life it is sufficient with only around 2,500 ones. This allows us to utilize the one-hot encoding of the syllables. A simple integer-indexed dictionary that contains 2,534 syllables from [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor) is uploaded here. However, another practical approach that can be adopted is using the dense character vectors from the fastText dictionary we've embedded. It compresses a sparse 2,534-dim vector into a dense 100-dim vector and possibly reflect the distributive semantics of syllables as subwords of morphemes. The code below imports the dictionary for sparse syllable encoding.
+For the second type of approachs, namely block-preserving ones, a significant advantage is that we can treat the characters as subword, which can be detered in the previous approaches. Theoretically we can utilize 11,172 characters as a syllable, but in real life it is sufficient with only around 2,500 ones. This allows us to utilize the one-hot encoding of the syllables. A simple integer-indexed dictionary that contains 2,534 syllables from [100-dimension fastText vector dictionary which was trained with 2M drama scripts](https://drive.google.com/open?id=1jHbjOcnaLourFzNuP47yGQVhBTq6Wgor) is uploaded here. However, another practical approach that can be adopted is using the dense character vectors from the fastText dictionary we've embedded. It compresses a sparse 2,534-dim vector into a dense 100-dim vector, possibly reflecting the distributive semantics of syllables as subwords of morphemes. 
+
+Besides, another sparse embedding scheme that aggregates all sounds in a block into a form of multi-hot encoding, was suggested recently, and we call it [Song](https://www.researchgate.net/publication/331987503_Sequence-to-Sequence_Autoencoder_based_Korean_Text_Error_Correction_using_Syllable-level_Multi-hot_Vector_Representation/stats). The code below imports the dictionary for sparse syllable encoding, and the multi-hot encoded vectors can be obtained by *char2onehot* defined above.
 
 ```python
 kor_char = np.load('kor_char.npy').item()
@@ -940,9 +947,11 @@ kor_char = np.load('kor_char.npy').item()
 
 * 또다른 음절 임베딩 방법으로는, 언급했던 fastText dictionary에 있는 length 1의 단어들 (음절들)의 dense embedding만 활용하는 것을 생각해볼 수 있겠습니다. 이는 2,534의 크기를 100으로 줄이면서, 음절들 간의 distributional semantics도 고려해줄 수 있기에 상당한 성능 개선이 있을 것으로 예상해볼 수 있는 방법입니다. 실제로 제가 [딥러닝 기반 띄어쓰기](https://github.com/warnikchow/ttuyssubot)에서 활용하여 어느 정도의 효과를 보았지요. 
 
+* 그리고 또 하나의 임베딩 방법이 최근 제시되었는데, 바로 하나의 character의 초/중/종성을 multi-hot vector로 만들어 주는 방법입니다. 저는 그런 생각을 한 게 제가 처음인 줄 알고 일단 특허 쓰고 논문을 작성 중이었는데, 구글 스칼라에서는 검색되지 않지만 이미 2018년 HCLT에서 [같은 방법](https://www.researchgate.net/publication/331987503_Sequence-to-Sequence_Autoencoder_based_Korean_Text_Error_Correction_using_Syllable-level_Multi-hot_Vector_Representation/stats)이 제시가 되었더라구요 ㅎㅎ역시 이 세계는 생각나는 대로 바로바로 하지 않으면 누가 하는 곳... 어쨌든 그래서 그 방식도 함께 여기서 비교해 보도록 하겠습니다. 해당  위에 있는 *char2onehot*을 통해 정의됩니다.
+
 ---
 
-The aforementioned methodologies are implemented in the following code as a featurization for RNN. Since the number of morphemes are generally smaller than the number of characters we've fixed the max character length to 80. Consequently, the sequence length for the alphabet embeddings (Shin & Cho) reaches 240. Again, to reflect the head-finality of Korean, the alphabets/characters are padded from the sentence-final.
+The aforementioned methodologies are implemented in the following code as a featurization for RNN. Since the number of morphemes are generally smaller than the number of 솓 characters, we fixed the max character length to 80. Consequently, the sequence length for the *Jamo*-level embeddings (Shin & Cho) reaches 240. Again, to reflect the head-finality of Korean, the Jamos/characters are padded from the sentence-final.
 
 ```python
 def featurize_rnnchar(corpus,wdim,chardict,maxlen):
@@ -963,7 +972,7 @@ def featurize_rnnchar(corpus,wdim,chardict,maxlen):
                 else:
                     rnn_shin[i][-3*j-3:,:] = np.transpose(shin_onehot(s[-j-1]))
                     rnn_cho[i][-3*j-3:,:] = np.transpose(cho_onehot(s[-j-1]))
-                #rnn_char[i][-j-1,:] = char2onehot(s[-j-1])
+                rnn_char[i][-j-1,:] = char2onehot(s[-j-1])
                 if s[-j-1] in model_ft:
                     rnn_total[i][-j-1,:] = model_ft[s[-j-1]]
                 if s[-j-1] in chardict:
@@ -973,11 +982,11 @@ def featurize_rnnchar(corpus,wdim,chardict,maxlen):
 fci_rec_shin, fci_rec_cho, fci_rec_char, fci_rec_onehot, fci_rec = featurize_rnnchar(fci_data,100,kor_char,80)
 ```
 
-* 앞서 얘기한 character embedding 방법론들이 RNN featurization의 형태로 정리된 코드입니다. 각각 Shin, Cho, 어떤 비밀 알고리즘 (?), one-hot encoded char embedding, 그리고 dense char embedding 을 output으로 합니다. 보통 형태소의 개수보다 음절 개수가 훨씬 많기 때문에 길이는 80으로 하였고, 이 과정에서 space도 하나의 character로 카운트됩니다. 자소분리 임베딩의 경우 3배의 길이를 가지는 것으로 간주하여 size 240을 최대로 하였습니다. 그리고 앞에서 그랬듯, 한국어의 head-finality를 고려하여 문장 뒷쪽에서부터 padding하였습니다. 비밀 알고리즘은 조만간 또 말씀드릴 일이 있을 것 같아요!
+* 앞서 얘기한 character embedding 방법론들이 RNN featurization의 형태로 정리된 코드입니다. 각각 Shin, Cho, Song, one-hot encoded char embedding, 그리고 dense char embedding 을 output으로 합니다. 보통 형태소의 개수보다 음절 개수가 훨씬 많기 때문에 길이는 80으로 하였고, 이 과정에서 space도 하나의 character로 카운트됩니다. 자소분리 임베딩의 경우 3배의 길이를 가지는 것으로 간주하여 size 240을 최대로 하였습니다. 그리고 앞에서 그랬듯, 한국어의 head-finality를 고려하여 문장 뒷쪽에서부터 padding하였습니다. 
 
 ---
 
-The below is the evaluation phase utilizing the case of dense character embedding, which is the best case among Shin, the one-hot encoded-char and the dense. Since the feature size is much bigger than the morpheme-based models, training epoch was extended to 50 for a fair comparison. The convergence was significantly slow compared with the morpheme-based cases, but we've obtained compatible accuracy (0.8802 > 0.8823) and F1 score (0.7906 > 0.7934) with respect to the performance with the morpheme-bilstm model. We assume that this result originates in the property of the syllables in Korean as subwords and the nature of the intention understanding task as a syntax-semantic task. Advanced from the vanilla models we've utilized so far, we may customize some Keras layers in the following chapter, to boost the performance.
+The below is the evaluation phase utilizing the case of dense character embedding, which is the best case among the five feature engineerings above. Since the feature size is much bigger than the morpheme-based models, training epoch was extended to 50 for a fair comparison. The convergence was significantly slow compared with the morpheme-based cases, but we've obtained compatible accuracy (0.8802 > 0.8823) and F1 score (0.7906 > 0.7934) with respect to the performance with the morpheme-bilstm model. We assume that this result originates in the property of the syllables in Korean as subwords and the nature of the intention understanding task as a syntax-semantic task. Advanced from the vanilla models we've utilized so far, we may customize some Keras layers in the following chapter, to boost the performance.
 
 ```python
 validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,0.1,16,'model/tutorial/rec_char_dense')
@@ -1142,7 +1151,7 @@ Epoch 35/50
 55129/55129 [==============================] - 165s 3ms/step - loss: 0.1675 - acc: 0.9414 - val_loss: 0.4274 - val_acc: 0.8823
 ```
 
-* 이제 evaluation part입니다. 그런데 다섯 개나 되는 모델의 train 결과를 모두 올리는 건 좀 무리수인 것 같네요. 그래서 결론만 말씀드리면, one-hot encoded char < Shin < dense char 의 순서로 성능이 좋습니다 ㅎㅎ 아무래도 궁금하실 dense char embedding의 트레이닝 phase만을 여기엔 업로드하도록 하겠습니다. 다른 알고리즘들은 validate_bilstm 모듈에 한번씩 돌려보면서 성능을 살펴보시면 좋을 것 같아요!
+* 이제 evaluation part입니다. 그런데 다섯 개나 되는 모델의 train 결과를 모두 올리는 건 좀 무리수인 것 같네요. 그래서 결론만 말씀드리면, one-hot encoded char < Cho < Shin < Song < dense char 의 순서로 성능이 좋습니다 ㅎㅎ 아무래도 궁금하실 dense char embedding의 트레이닝 phase만을 여기엔 업로드하도록 하겠습니다. 다른 알고리즘들은 validate_bilstm 모듈에 한번씩 돌려보면서 성능을 살펴보시면 좋을 것 같아요!
 
 * 비록 feature size의 차이로 training epoch가 좀 늘어나긴 했지만 이는 convergence를 유도하기 위함이고, converge했다는 가정 하에서 morpheme based model보다 근소하게 더 성능이 좋음을 확인할 수 있었습니다. 이는 좀 의외의 결과였는데요, morpheme-based model과 다르게 여기서는 의미에 관련된 어떤 preprocessing도 거치지 않고 raw data만을 dictionary embedding한 것이기 때문입니다. 여기서, 한국어에서는 각 음절이 어느 정도 subword 역할을 해 주며 그 sequential한 배열로부터 문장의 의도를 파악하면 형태소 단위의 분석보다 때로는 더 정확할 수 있다는 것을 짐작할 수 있습니다. 좋은 성능의 배경에는 intention understanding 이라는 task의 특징이, 그리고 한국어의 agglutinative language로써의 특징이 있겠지만요.
 
