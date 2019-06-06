@@ -986,7 +986,7 @@ fci_rec_shin, fci_rec_cho, fci_rec_char, fci_rec_onehot, fci_rec = featurize_rnn
 
 ---
 
-The below is the evaluation phase utilizing the case of dense character embedding, which is the best case among the five feature engineerings above. Since the feature size is much bigger than the morpheme-based models, training epoch was extended to 50 for a fair comparison. The convergence was significantly slow compared with the morpheme-based cases, but we've obtained compatible accuracy (0.8802 > 0.8823) and F1 score (0.7906 > 0.7934) with respect to the performance with the morpheme-bilstm model. We assume that this result originates in the property of the syllables in Korean as subwords and the nature of the intention understanding task as a syntax-semantic task. Advanced from the vanilla models we've utilized so far, we may customize some Keras layers in the following chapter, to boost the performance.
+The below is the evaluation phase utilizing the case of dense character embedding, which is the best case among the five feature engineerings above. Since the feature size is much bigger than the morpheme-based models, training epoch was extended to 50 for a fair comparison. The convergence was significantly slow compared with the morpheme-based cases, but we've obtained compatible accuracy (0.8802 > 0.8823) and F1 score (0.7906 > 0.7934) with respect to the performance with the morpheme-bilstm model. We assume that this result originates in the property of the syllables in Korean as subwords and the nature of the intention understanding task as a syntax-semantic task. 
 
 ```python
 validate_bilstm(fci_rec,fci_label,32,128,class_weights_fci,0.1,16,'model/tutorial/rec_char_dense')
@@ -1154,6 +1154,10 @@ Epoch 35/50
 * 이제 evaluation part입니다. 그런데 다섯 개나 되는 모델의 train 결과를 모두 올리는 건 좀 무리수인 것 같네요. 그래서 결론만 말씀드리면, one-hot encoded char < Cho < Shin < Song < dense char 의 순서로 성능이 좋습니다 ㅎㅎ 아무래도 궁금하실 dense char embedding의 트레이닝 phase만을 여기엔 업로드하도록 하겠습니다. 다른 알고리즘들은 validate_bilstm 모듈에 한번씩 돌려보면서 성능을 살펴보시면 좋을 것 같아요!
 
 * 비록 feature size의 차이로 training epoch가 좀 늘어나긴 했지만 이는 convergence를 유도하기 위함이고, converge했다는 가정 하에서 morpheme based model보다 근소하게 더 성능이 좋음을 확인할 수 있었습니다. 이는 좀 의외의 결과였는데요, morpheme-based model과 다르게 여기서는 의미에 관련된 어떤 preprocessing도 거치지 않고 raw data만을 dictionary embedding한 것이기 때문입니다. 여기서, 한국어에서는 각 음절이 어느 정도 subword 역할을 해 주며 그 sequential한 배열로부터 문장의 의도를 파악하면 형태소 단위의 분석보다 때로는 더 정확할 수 있다는 것을 짐작할 수 있습니다. 좋은 성능의 배경에는 intention understanding 이라는 task의 특징이, 그리고 한국어의 agglutinative language로써의 특징이 있겠지만요.
+
+---
+
+Advanced from the vanilla models we've utilized so far, we may customize some Keras layers in the following chapter, to boost the performance.
 
 * 지금까지 우리가 사용한 알고리즘들은 모두 vanilla cnn/bilstm이었고, 별도로 레이어를 쪼개고 합하고 곱하고 하지는 않았습니다. 하지만 back propagation을 이용한 트레이닝들의 장점은 연산의 커스터마이징이 가능하다는 점이며, 케라스에서도 그러한 연산들은 대부분 가능합니다. 다음 꼭지부터는 cnn과 bilstm을 엮어서 모델을 짜는 방법을 한번 알아보도록 하겠습니다.
 
