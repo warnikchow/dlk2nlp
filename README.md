@@ -1162,5 +1162,199 @@ Advanced from the vanilla models we've utilized so far, we may customize some Ke
 * 지금까지 우리가 사용한 알고리즘들은 모두 vanilla cnn/bilstm이었고, 별도로 레이어를 쪼개고 합하고 곱하고 하지는 않았습니다. 하지만 back propagation을 이용한 트레이닝들의 장점은 연산의 커스터마이징이 가능하다는 점이며, 케라스에서도 그러한 연산들은 대부분 가능합니다. 다음 꼭지부터는 cnn과 bilstm을 엮어서 모델을 짜는 방법을 한번 알아보도록 하겠습니다.
 
 ## 9. Concatenation of CNN and RNN layers
+
+Now, we get back to the morpheme-based approaches. Here, for the first time we customize the layers for a new implementation! The procedure is the most simple one, a concatenation of two separate networks. We've done with CNN and RNN(BiLSTM)-based approaches so far, thus, a concatenation of the two systems will be executed. Beyond simply putting *model.xxx*, we need some unseen module at this point, **Model**. This helps make in-out of the customized layers.
+
+```python
+from keras.models import Model
+import keras.layers as layers
+from keras.layers import Input
+from keras.layers.core import Dense, Dropout
+```
+
+* 이제 다시 형태소 기반의 접근으로 돌아가 보도록 하겠습니다. 이제 처음으로, 단순히 model.머시기로 쌓는 게 아닌, 커스터마이즈드 레이어를 만들어보려고 해요! 물론 가장 기본적인, simple concatenation부터 시작해보도록 하겠습니다. 대상은 앞서 다루었던 CNN과 RNN(BiLSTM)입니다. 이를 위해서, 앞과는 다른 모듈들을 import할 필요가 있겠죠. 바로 **Model** 입니다. 커스터마이즈드 레이어의 입출력을 다룰 수 있게 해주죠!
+
+---
+
+The following is a simple code for a concatenation of CNN and RNN networks. The input dimensions were filled with the property regarding RNN input. There are some points you should look at: the dense layers after CNN and RNN summarization, the line with *layer.concatenate*, and the model declaration stage *model = Model(inputs = [cnn,rnn], outputs = [main_output])*. Dropouts were added since the model became so bigger than the previous ones. Wait ... there is another unseen function ... in callbacks?
+
+```python
+def validate_cnnrnn(conv,rnn,train_y,filters,hidden_lstm,hidden_dim,cw,filename):
+    cnn_input = Input(shape=(len(rnn[0]),len(rnn[0][0]),1), dtype='float32')
+    cnn_layer = layers.Conv2D(filters,(3,len(rnn[0][0])),activation='relu')(cnn_input)
+    cnn_layer = layers.MaxPooling2D((2,1))(cnn_layer)
+    cnn_layer = layers.Conv2D(filters,(3,1),activation='relu')(cnn_layer)
+    cnn_layer = layers.Flatten()(cnn_layer)
+    cnn_output= Dense(hidden_dim, activation='relu')(cnn_layer)
+    rnn_input = Input(shape=(len(rnn[0]),len(rnn[0][0])), dtype='float32')
+    rnn_layer = Bidirectional(LSTM(hidden_lstm))(rnn_input)
+    rnn_output= Dense(hidden_dim, activation='relu')(rnn_layer)
+    output    = layers.concatenate([cnn_output,rnn_output])
+    output    = Dense(hidden_dim, activation='relu')(output)
+    output    = Dropout(0.3)(output)
+    output    = Dense(hidden_dim, activation='relu')(output)
+    output    = Dropout(0.3)(output)
+    main_output = Dense(7,activation='softmax')(output)
+    model = Sequential()
+    model = Model(inputs=[cnn_input,rnn_input], outputs=[main_output])
+    model.compile(optimizer=adam_half, loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    filepath=filename+"-{epoch:02d}-{val_acc:.4f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, mode='max')
+    callbacks_list = [metricsf1macro_2input,checkpoint]
+    model.summary()
+    model.fit([conv,rnn],train_y,validation_split=0.1,epochs=30,batch_size=16,callbacks=callbacks_list,class_weight=cw)
+```
+
+상기 코드는 간단하게 CNN과 RNN 구조를 concatenate해 줍니다! 앞에서부터 쭉 보면 CNN_input과 CNN_output을 정의하고, RNN_input과 RNN_output을 정의하고, 두 레이어를 layer.concatenate를 이용해 합친 뒤, 앞서 했던 output에 대한 방법론과 비슷하게 진행하는 것을 파악할 수 있지요. 여기서 중요하게 볼 point들은 1. CNN과 RNN을 Dense layer로 summarize하여 concatenate하기 쉽게 만드는 부분, 2. *layer.concatenate*로 concatenate하는 부분, 3. *Model* 펑션으로 inputs와 outputs를 이은 하나의 큰 덩어리를 만드는 부분입니다. Dropout은 그냥 모델이 너무 커져서 넣어 보았습니다 ㅎㅎ 어... 그런데 callback부분에 못 보던 내용이 있군요?
+
+---
+
+As in Keras, we need to define another callback function for F1 score if we adopt more than one input. Actually, a different format of function is required for every number of more-than-one-input! Very annoying, but anyway, we've adopted two inputs, thus let's make up another function for the evaluation.
+
+```python
+class Metricsf1macro_2input(Callback):
+ def on_train_begin(self, logs={}):
+  self.val_f1s = []
+  self.val_recalls = []
+  self.val_precisions = []
+  self.val_f1s_w = []
+  self.val_recalls_w = []
+  self.val_precisions_w = []
+ def on_epoch_end(self, epoch, logs={}):
+  if len(self.validation_data)>2:
+   val_predict = np.asarray(self.model.predict([self.validation_data[0],self.validation_data[1]]))
+   val_predict = np.argmax(val_predict,axis=1)
+   val_targ = self.validation_data[2]
+  else:
+   val_predict = np.asarray(self.model.predict(self.validation_data[0]))
+   val_predict = np.argmax(val_predict,axis=1)
+   val_targ = self.validation_data[1]
+  _val_f1 = metrics.f1_score(val_targ, val_predict, average="macro")
+  _val_f1_w = metrics.f1_score(val_targ, val_predict, average="weighted")
+  _val_recall = metrics.recall_score(val_targ, val_predict, average="macro")
+  _val_recall_w = metrics.recall_score(val_targ, val_predict, average="weighted")
+  _val_precision = metrics.precision_score(val_targ, val_predict, average="macro")
+  _val_precision_w = metrics.precision_score(val_targ, val_predict, average="weighted")
+  self.val_f1s.append(_val_f1)
+  self.val_recalls.append(_val_recall)
+  self.val_precisions.append(_val_precision)
+  self.val_f1s_w.append(_val_f1_w)
+  self.val_recalls_w.append(_val_recall_w)
+  self.val_precisions_w.append(_val_precision_w)
+  print("— val_f1: %f — val_precision: %f — val_recall: %f"%(_val_f1, _val_precision, _val_recall))
+  print("— val_f1_w: %f — val_precision_w: %f — val_recall_w: %f"%(_val_f1_w, _val_precision_w, _val_recall_w))
+
+metricsf1macro_2input = Metricsf1macro_2input()
+```
+
+매-우 귀찮지만, 케라스에서 하나 이상의 input을 가진 모델에 대해 F1 score을 얻고 싶다면, 앞서 정의한 것과 다른, 별도의 function을 만들어야 합니다... 왜 이랬을까요? 아마 그쪽에서도 귀찮아서가 아닐까 싶습니다. 어쨌든 evaluation을 해야 하니, 정의를 해 보도록 하겠습니다.
+
+---
+
+Now, let's validate with the morpheme-based feaftures!
+
+```python
+validate_cnnrnn(fci_conv,fci_rec,fci_label,32,32,128,class_weights_fci,'model/modelfci/charcnn+bilstm')
+```
+
+We can see that the performance has degenerated even compared with the vanilla BiLSTM approach. Well, not always the bigger model results in the better performance. We infer that this originates in the distortion that comes from the difference in the way that CNN and RNN solve the problem. Next, we try another module, *attention network*, by introducing the backend of Keras.
+
+```properties
+# CONSOLE RESULT
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_7 (InputLayer)            (None, 30, 100, 1)   0                                            
+__________________________________________________________________________________________________
+conv2d_7 (Conv2D)               (None, 28, 1, 32)    9632        input_7[0][0]                    
+__________________________________________________________________________________________________
+max_pooling2d_4 (MaxPooling2D)  (None, 14, 1, 32)    0           conv2d_7[0][0]                   
+__________________________________________________________________________________________________
+conv2d_8 (Conv2D)               (None, 12, 1, 32)    3104        max_pooling2d_4[0][0]            
+__________________________________________________________________________________________________
+input_8 (InputLayer)            (None, 30, 100)      0                                            
+__________________________________________________________________________________________________
+flatten_4 (Flatten)             (None, 384)          0           conv2d_8[0][0]                   
+__________________________________________________________________________________________________
+bidirectional_3 (Bidirectional) (None, 64)           34048       input_8[0][0]                    
+__________________________________________________________________________________________________
+dense_11 (Dense)                (None, 128)          49280       flatten_4[0][0]                  
+__________________________________________________________________________________________________
+dense_12 (Dense)                (None, 128)          8320        bidirectional_3[0][0]            
+__________________________________________________________________________________________________
+concatenate_3 (Concatenate)     (None, 256)          0           dense_11[0][0]                   
+                                                                 dense_12[0][0]                   
+__________________________________________________________________________________________________
+dense_13 (Dense)                (None, 128)          32896       concatenate_3[0][0]              
+__________________________________________________________________________________________________
+dropout_5 (Dropout)             (None, 128)          0           dense_13[0][0]                   
+__________________________________________________________________________________________________
+dense_14 (Dense)                (None, 128)          16512       dropout_5[0][0]                  
+__________________________________________________________________________________________________
+dropout_6 (Dropout)             (None, 128)          0           dense_14[0][0]                   
+__________________________________________________________________________________________________
+dense_15 (Dense)                (None, 7)            903         dropout_6[0][0]                  
+==================================================================================================
+Total params: 154,695
+Trainable params: 154,695
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Train on 55129 samples, validate on 6126 samples
+Epoch 1/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.6263 - acc: 0.7916— val_f1: 0.730286 — val_precision: 0.768703 — val_recall: 0.705825
+— val_f1_w: 0.843637 — val_precision_w: 0.842989 — val_recall_w: 0.847698
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.6261 - acc: 0.7916 - val_loss: 0.4664 - val_acc: 0.8477
+Epoch 2/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.4405 - acc: 0.8548— val_f1: 0.758616 — val_precision: 0.786346 — val_recall: 0.740990
+— val_f1_w: 0.856354 — val_precision_w: 0.860634 — val_recall_w: 0.857982
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.4405 - acc: 0.8548 - val_loss: 0.4282 - val_acc: 0.8580
+Epoch 3/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3859 - acc: 0.8731— val_f1: 0.759942 — val_precision: 0.804874 — val_recall: 0.729082
+— val_f1_w: 0.861656 — val_precision_w: 0.863499 — val_recall_w: 0.865002
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.3859 - acc: 0.8731 - val_loss: 0.3992 - val_acc: 0.8650
+Epoch 4/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3492 - acc: 0.8831— val_f1: 0.781057 — val_precision: 0.795622 — val_recall: 0.769233
+— val_f1_w: 0.868542 — val_precision_w: 0.869711 — val_recall_w: 0.869899
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.3493 - acc: 0.8831 - val_loss: 0.3879 - val_acc: 0.8699
+Epoch 5/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3177 - acc: 0.8927— val_f1: 0.779071 — val_precision: 0.829605 — val_recall: 0.746311
+— val_f1_w: 0.865831 — val_precision_w: 0.870711 — val_recall_w: 0.868919
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.3177 - acc: 0.8927 - val_loss: 0.4028 - val_acc: 0.8689
+Epoch 6/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2919 - acc: 0.9011— val_f1: 0.783441 — val_precision: 0.804650 — val_recall: 0.768078
+— val_f1_w: 0.872711 — val_precision_w: 0.873444 — val_recall_w: 0.873980
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.2919 - acc: 0.9011 - val_loss: 0.3968 - val_acc: 0.8740
+Epoch 7/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2667 - acc: 0.9091— val_f1: 0.784232 — val_precision: 0.819105 — val_recall: 0.761072
+— val_f1_w: 0.870747 — val_precision_w: 0.870663 — val_recall_w: 0.873164
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.2667 - acc: 0.9091 - val_loss: 0.4189 - val_acc: 0.8732
+Epoch 8/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2447 - acc: 0.9174— val_f1: 0.781662 — val_precision: 0.811667 — val_recall: 0.758755
+— val_f1_w: 0.868505 — val_precision_w: 0.869532 — val_recall_w: 0.871205
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.2447 - acc: 0.9174 - val_loss: 0.4401 - val_acc: 0.8712
+Epoch 9/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2226 - acc: 0.9235— val_f1: 0.777220 — val_precision: 0.781946 — val_recall: 0.782025
+— val_f1_w: 0.873209 — val_precision_w: 0.874389 — val_recall_w: 0.873980
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.2227 - acc: 0.9235 - val_loss: 0.4419 - val_acc: 0.8740
+Epoch 10/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2055 - acc: 0.9280— val_f1: 0.776107 — val_precision: 0.795161 — val_recall: 0.763229
+— val_f1_w: 0.867720 — val_precision_w: 0.867430 — val_recall_w: 0.869246
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.2055 - acc: 0.9280 - val_loss: 0.4681 - val_acc: 0.8692
+Epoch 11/30
+55104/55129 [============================>.] - ETA: 0s - loss: 0.1893 - acc: 0.9344— val_f1: 0.788884 — val_precision: 0.796599 — val_recall: 0.782946
+— val_f1_w: 0.875588 — val_precision_w: 0.876054 — val_recall_w: 0.875612
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.1892 - acc: 0.9345 - val_loss: 0.4614 - val_acc: 0.8756
+Epoch 12/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.1749 - acc: 0.9389— val_f1: 0.784650 — val_precision: 0.809236 — val_recall: 0.767474
+— val_f1_w: 0.871932 — val_precision_w: 0.871065 — val_recall_w: 0.874306
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.1750 - acc: 0.9389 - val_loss: 0.4874 - val_acc: 0.8743
+Epoch 13/30
+55120/55129 [============================>.] - ETA: 0s - loss: 0.1613 - acc: 0.9439— val_f1: 0.790170 — val_precision: 0.813151 — val_recall: 0.771651
+— val_f1_w: 0.874813 — val_precision_w: 0.874452 — val_recall_w: 0.876755
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.1613 - acc: 0.9439 - val_loss: 0.5269 - val_acc: 0.8768
+```
+
+어... vanilla BiLSTM보다 성능이 떨어졌네요 ㅎㅎ 뭐 그럴수도 있죠... 아무래도 CNN과 BiLSTM이 infer하는 과정에서 양상이 달라, jointly training에서는 혼선이 생긴 것이 아닌가 싶습니다. model을 merge하는 것이 꼭 좋은 결과를 가져오지는 않는 것 같아요. 다음 장에서는 backend인 tensorflow를 끌어 와서 self-attentive BiLSTM을 구현해 보도록 하겠습니다.
+
 ## 10. BiLSTM Self-attention
 ## 11. BERT and after
