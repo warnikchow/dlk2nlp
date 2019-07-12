@@ -37,8 +37,8 @@ fasttext (Gensim if inavailable), Keras, konlpy (refer to the [documentation](ht
 [7. RNN (BiLSTM)-based sentence classification](https://github.com/warnikchow/dlk2nlp#7-rnn-bilstm-based-sentence-classification)</br>
 [8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
 [9. Concatenation of CNN and RNN layers](https://github.com/warnikchow/dlk2nlp#9-concatenation-of-cnn-and-rnn-layers)</br>
-[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-bilstm-self-attention)</br>
-[11. BERT and after](https://github.com/warnikchow/dlk2nlp#11-bert-and-after)
+[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-self-attentive-bilstm)</br>
+[11. Transformer, BERT, and after](https://github.com/warnikchow/dlk2nlp#11-transformer-bert-and-after)
 
 ## 0. Corpus labeling
 The most annoying and confusing process. Annotation guideline should be provided to annotators, and more than two natives are to be engaged in to make the labeling reliable and also for the computation of inter-annotator agreement (IAA). In this project, a multi-class (7) annotation of short Korean utterances is utilized.
@@ -1404,6 +1404,125 @@ At the very beginning of the code, BiLSTM module is defined so that each hidden 
 	 	 
 요즘, 아니 꽤 오랫동안 NLP와 ML에서 혁신을 가져왔던 attention mechanism을 이제서야 만나볼 수 있게 되었습니다. 많은 분들이 익숙하신 내용은 주로 machine translation과 함께 사용되었던 [attention model](https://arxiv.org/abs/1409.0473)이나 Transformer의 [self attention](http://papers.nips.cc/paper/7181-attention-is-all-you-need)일 텐데요, 여기서는 비슷한 시기에 sentence classification task를 위해 등장한 structured self-attentive embedding을 살펴보도록 하겠습니다. self attention이 나온다기는 좀 뭐하지만, attention vector을 활용하여 sentence classification에 사용되는 latent variable들에 정보를 주는데, 그 source가 자기 자신이라는 점이 self-attention과 유사한 측면이 있다고 생각됩니다.
 
+아주 러프하게 말하면, 전체 procedure는 BiLSTM의 hidden layer sequence에 column-wise하게 곱해지는 attention vector를 얻는 데에 있어, context vector라는 개념을 도입하는 데에 있습니다. Context vector의 dimension을 *hidden_con*이라고 한다면, 우선 BiLSTM에서 MLP를 통해 *hidden_con*의 크기를 가진 dense layer을 각 hidden layer에 대해 뽑아낸 후, context vector와 column-wise한 inner product를 통해 attention vector을 얻는 것이죠. 어떻게 말해도 복잡하네요... 위에 있는 그림을 보는 것이 좀 더 이해가 빠를 것입니다 ㅎㅎ 여튼 여기서 중요한 점은, 케라스를 이용해서도 이 과정을 구현할 수 있다, 그런데 구현하려면 backend와 lambda라는 녀석들이 필요하다! 이 정도인 것 같네요.
+
 ---
+
+The implementation might not be optimum, but well, we followed the description in the paper! The result shows that the self-attentive BiLSTM outperforms the vanilla one and the CNN-RNN concatenation, and matches with the character-based approach (which incorporates pretrained word embedding)! But it's not sure if we can push through the wall of 90% ...
+
+```properties
+>>> validate_rnn_self_drop(fci_rec,fci_label,32,64,256,class_weights_fci,0.1,16,'model/tutorial/rec_self_drop')
+
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to                     
+==================================================================================================
+input_12 (InputLayer)           (None, 64)           0                                            
+__________________________________________________________________________________________________
+dense_20 (Dense)                (None, 64)           4160        input_12[0][0]                   
+__________________________________________________________________________________________________
+input_11 (InputLayer)           (None, 30, 100)      0                                            
+__________________________________________________________________________________________________
+dropout_8 (Dropout)             (None, 64)           0           dense_20[0][0]                   
+__________________________________________________________________________________________________
+bidirectional_5 (Bidirectional) (None, 30, 64)       34048       input_11[0][0]                   
+__________________________________________________________________________________________________
+dense_21 (Dense)                (None, 64)           4160        dropout_8[0][0]                  
+__________________________________________________________________________________________________
+dense_19 (Dense)                (None, 30, 64)       4160        bidirectional_5[0][0]            
+__________________________________________________________________________________________________
+lambda_1 (Lambda)               (None, 30)           0           dense_21[0][0]                   
+                                                                 dense_19[0][0]                   
+__________________________________________________________________________________________________
+dense_22 (Dense)                (None, 30)           930         lambda_1[0][0]                   
+__________________________________________________________________________________________________
+reshape_1 (Reshape)             (None, 30, 1)        0           dense_22[0][0]                   
+__________________________________________________________________________________________________
+multiply_1 (Multiply)           (None, 30, 64)       0           reshape_1[0][0]                  
+                                                                 bidirectional_5[0][0]            
+__________________________________________________________________________________________________
+lambda_2 (Lambda)               (None, 64)           0           multiply_1[0][0]                 
+__________________________________________________________________________________________________
+dense_23 (Dense)                (None, 256)          16640       lambda_2[0][0]                   
+__________________________________________________________________________________________________
+dropout_9 (Dropout)             (None, 256)          0           dense_23[0][0]                   
+__________________________________________________________________________________________________
+dense_24 (Dense)                (None, 256)          65792       dropout_9[0][0]                  
+__________________________________________________________________________________________________
+dropout_10 (Dropout)            (None, 256)          0           dense_24[0][0]                   
+__________________________________________________________________________________________________
+dense_25 (Dense)                (None, 7)            1799        dropout_10[0][0]                 
+==================================================================================================
+Total params: 131,689
+Trainable params: 131,689
+Non-trainable params: 0
+__________________________________________________________________________________________________
+Train on 55129 samples, validate on 6126 samples
+Epoch 1/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.6279 - acc: 0.7886— val_f1: 0.711039 — val_precision: 0.807089 — val_recall: 0.670628
+— val_f1_w: 0.831240 — val_precision_w: 0.842004 — val_recall_w: 0.839700
+55129/55129 [==============================] - 86s 2ms/step - loss: 0.6279 - acc: 0.7886 - val_loss: 0.4957 - val_acc: 0.8397
+Epoch 2/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.4680 - acc: 0.8442— val_f1: 0.754434 — val_precision: 0.791817 — val_recall: 0.731321
+— val_f1_w: 0.848612 — val_precision_w: 0.848852 — val_recall_w: 0.851126
+55129/55129 [==============================] - 88s 2ms/step - loss: 0.4680 - acc: 0.8442 - val_loss: 0.4490 - val_acc: 0.8511
+Epoch 3/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.4244 - acc: 0.8578— val_f1: 0.771808 — val_precision: 0.812655 — val_recall: 0.743364
+— val_f1_w: 0.858047 — val_precision_w: 0.858865 — val_recall_w: 0.861410
+55129/55129 [==============================] - 86s 2ms/step - loss: 0.4243 - acc: 0.8578 - val_loss: 0.4134 - val_acc: 0.8614
+Epoch 4/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3948 - acc: 0.8673— val_f1: 0.751910 — val_precision: 0.806796 — val_recall: 0.719961
+— val_f1_w: 0.856063 — val_precision_w: 0.856820 — val_recall_w: 0.860431
+55129/55129 [==============================] - 87s 2ms/step - loss: 0.3948 - acc: 0.8673 - val_loss: 0.4073 - val_acc: 0.8604
+Epoch 5/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3688 - acc: 0.8747— val_f1: 0.772794 — val_precision: 0.823605 — val_recall: 0.740154
+— val_f1_w: 0.860423 — val_precision_w: 0.866368 — val_recall_w: 0.863206
+55129/55129 [==============================] - 91s 2ms/step - loss: 0.3688 - acc: 0.8747 - val_loss: 0.4034 - val_acc: 0.8632
+Epoch 6/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3482 - acc: 0.8801— val_f1: 0.782679 — val_precision: 0.834986 — val_recall: 0.751268
+— val_f1_w: 0.867117 — val_precision_w: 0.871998 — val_recall_w: 0.871041
+55129/55129 [==============================] - 89s 2ms/step - loss: 0.3482 - acc: 0.8801 - val_loss: 0.3943 - val_acc: 0.8710
+Epoch 7/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3285 - acc: 0.8869— val_f1: 0.775507 — val_precision: 0.834404 — val_recall: 0.740948
+— val_f1_w: 0.866852 — val_precision_w: 0.870674 — val_recall_w: 0.871205
+55129/55129 [==============================] - 86s 2ms/step - loss: 0.3284 - acc: 0.8869 - val_loss: 0.4053 - val_acc: 0.8712
+Epoch 8/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.3166 - acc: 0.8914— val_f1: 0.789958 — val_precision: 0.832346 — val_recall: 0.761638
+— val_f1_w: 0.874285 — val_precision_w: 0.877032 — val_recall_w: 0.877408
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.3166 - acc: 0.8914 - val_loss: 0.3843 - val_acc: 0.8774
+Epoch 9/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.3011 - acc: 0.8956— val_f1: 0.796802 — val_precision: 0.811898 — val_recall: 0.786651
+— val_f1_w: 0.872073 — val_precision_w: 0.872473 — val_recall_w: 0.873653
+55129/55129 [==============================] - 91s 2ms/step - loss: 0.3011 - acc: 0.8956 - val_loss: 0.3862 - val_acc: 0.8737
+Epoch 10/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2873 - acc: 0.9008— val_f1: 0.786752 — val_precision: 0.821892 — val_recall: 0.765839
+— val_f1_w: 0.874281 — val_precision_w: 0.877892 — val_recall_w: 0.877408
+55129/55129 [==============================] - 93s 2ms/step - loss: 0.2873 - acc: 0.9008 - val_loss: 0.3845 - val_acc: 0.8774
+Epoch 11/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2755 - acc: 0.9048— val_f1: 0.796917 — val_precision: 0.856046 — val_recall: 0.760149
+— val_f1_w: 0.877631 — val_precision_w: 0.881019 — val_recall_w: 0.881815
+55129/55129 [==============================] - 92s 2ms/step - loss: 0.2755 - acc: 0.9048 - val_loss: 0.3812 - val_acc: 0.8818
+Epoch 12/50
+55088/55129 [============================>.] - ETA: 0s - loss: 0.2633 - acc: 0.9076— val_f1: 0.793011 — val_precision: 0.825051 — val_recall: 0.769426
+— val_f1_w: 0.878768 — val_precision_w: 0.878530 — val_recall_w: 0.881325
+55129/55129 [==============================] - 90s 2ms/step - loss: 0.2633 - acc: 0.9076 - val_loss: 0.3828 - val_acc: 0.8813
+Epoch 13/50
+55104/55129 [============================>.] - ETA: 0s - loss: 0.2515 - acc: 0.9121— val_f1: 0.791692 — val_precision: 0.792037 — val_recall: 0.792989
+— val_f1_w: 0.873094 — val_precision_w: 0.872973 — val_recall_w: 0.873980
+55129/55129 [==============================] - 91s 2ms/step - loss: 0.2515 - acc: 0.9122 - val_loss: 0.3975 - val_acc: 0.8740
+Epoch 14/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2413 - acc: 0.9150— val_f1: 0.799131 — val_precision: 0.802153 — val_recall: 0.797500
+— val_f1_w: 0.878161 — val_precision_w: 0.877972 — val_recall_w: 0.878877
+55129/55129 [==============================] - 94s 2ms/step - loss: 0.2413 - acc: 0.9150 - val_loss: 0.3853 - val_acc: 0.8789
+Epoch 15/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2295 - acc: 0.9190— val_f1: 0.800154 — val_precision: 0.813464 — val_recall: 0.789562
+— val_f1_w: 0.876815 — val_precision_w: 0.876335 — val_recall_w: 0.877897
+55129/55129 [==============================] - 96s 2ms/step - loss: 0.2294 - acc: 0.9190 - val_loss: 0.3951 - val_acc: 0.8779
+Epoch 16/50
+55120/55129 [============================>.] - ETA: 0s - loss: 0.2200 - acc: 0.9227— val_f1: 0.791979 — val_precision: 0.816055 — val_recall: 0.775612
+— val_f1_w: 0.879622 — val_precision_w: 0.879747 — val_recall_w: 0.881978
+55129/55129 [==============================] - 97s 2ms/step - loss: 0.2200 - acc: 0.9227 - val_loss: 0.4043 - val_acc: 0.8820
+```
+
+어찌어찌하여 character-level embedding과 비슷한 결과가 나오긴 했네요 ㅎㅎ 힘들었습니다...만 여기서 그나마 얻은 것은 케라스에서도 이런 layer 단위의 빡센 아키텍쳐 수립이 가능하다는 점이었네요 ㅎㅎ 이게 베스트 구현인지는 모르겠습니다만 어쨌든 논문에서 하라는 대로 다 구현도 했고 성능도 아까에 비해서는 올랐습니다! ㅠㅠ 그런데 과연 우린 90%의 벽을 넘을 수 있을까요? 그 전에 89% 벽을 넘을 수 있을까요..? 지금까지의 feature-based approach들과 차별화된 뭔가 다른 접근방법이 필요한 것은 아닐까요....?
 
 ## 11. Transformer, BERT, and after
