@@ -1357,4 +1357,49 @@ Epoch 13/30
 어... vanilla BiLSTM보다 성능이 떨어졌네요 ㅎㅎ 뭐 그럴수도 있죠... 아무래도 CNN과 BiLSTM이 infer하는 과정에서 양상이 달라, jointly training에서는 혼선이 생긴 것이 아닌가 싶습니다. model을 merge하는 것이 꼭 좋은 결과를 가져오지는 않는 것 같아요. 다음 장에서는 backend인 tensorflow를 끌어 와서 self-attentive BiLSTM을 구현해 보도록 하겠습니다.
 
 ## 10. BiLSTM Self-attention
+
+The second to the final step is applying 'the' attention mechanism, which has shifted paradigm of deep learning architectures, and still shifting... Many will be familiar with the [attention model](https://arxiv.org/abs/1409.0473) which came out along with [RNN encoder-decoder](https://arxiv.org/abs/1406.1078), or the self-attention which was suggested in [Transformer](http://papers.nips.cc/paper/7181-attention-is-all-you-need), which deals with seq2seq-style problems such as machine translation. Though the inherit philosophy may be consistent, here, we introduce a [structured self attentive embedding](https://arxiv.org/abs/1703.03130) which was suggested for an effective sentence classification.
+
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/selfAA.png" width="700"><br/>
+    (image from [Lin 2017](https://arxiv.org/abs/1703.03130))
+
+The key idea in this paper is to train an additional attention layer that assigns weight to each hidden layer of the BiLSTM structure. For this, a context vector of the size same as the hidden layer width, i.e. 64 as will be implemented, is separately defined and jointly trained, in the manner that **it is column-wisely multiplied with the MLP from each hidden layer to yield the attention vector**. The attention vector is recursively multiplied to the hidden layers so that the weighted sum becomes the final summarization for the fine-tuning. The code is implemented below; with the new function *lambda* which enables us to customize the layers in somewhat sophiscated ways. We also need to import the backend of Keras, here TensorFlow, for the layer-level and specific operations.
+
+```python
+from keras.layers import Lambda
+import keras.backend as K
+
+def validate_rnn_self_drop(x_rnn,x_y,hidden_lstm,hidden_con,hidden_dim,cw,val_sp,bat_size,filename):
+    char_r_input = Input(shape=(len(x_rnn[0]),len(x_rnn[0][0])),dtype='float32')
+    r_seq = Bidirectional(LSTM(hidden_lstm,return_sequences=True))(char_r_input)
+    r_att = Dense(hidden_con, activation='tanh')(r_seq)
+    att_source   = np.zeros((len(x_rnn),hidden_con))
+    att_test     = np.zeros((len(x_rnn),hidden_con))
+    att_input    = Input(shape=(hidden_con,), dtype='float32')
+    att_vec      = Dense(hidden_con,activation='relu')(att_input)
+    att_vec      = Dropout(0.3)(att_vec)
+    att_vec      = Dense(hidden_con,activation='relu')(att_vec)
+    att_vec = Lambda(lambda x: K.batch_dot(*x, axes=(1,2)))([att_vec,r_att])
+    att_vec = Dense(len(x_rnn[0]),activation='softmax')(att_vec)
+    att_vec = layers.Reshape((len(x_rnn[0]),1))(att_vec)
+    r_seq   = layers.multiply([att_vec,r_seq])
+    r_seq   = Lambda(lambda x: K.sum(x, axis=1))(r_seq)
+    r_seq   = Dense(hidden_dim, activation='relu')(r_seq)
+    r_seq   = Dropout(0.3)(r_seq)
+    r_seq   = Dense(hidden_dim, activation='relu')(r_seq)
+    r_seq   = Dropout(0.3)(r_seq)
+    main_output = Dense(int(max(x_y)+1),activation='softmax')(r_seq)
+    model = Sequential()
+    model = Model(inputs=[char_r_input,att_input],outputs=[main_output])
+    model.summary()
+    model.compile(optimizer=adam_half,loss="sparse_categorical_crossentropy",metrics=["accuracy"])
+    filepath=filename+"-{epoch:02d}-{val_acc:.4f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, mode='max')
+    callbacks_list = [metricsf1macro_2input,checkpoint]
+    model.fit([x_rnn,att_source],x_y,validation_split=val_sp,epochs=50,batch_size= bat_size ,callbacks=callbacks_list,class_weight=cw)
+```
+
+At the very beginning of the code, BiLSTM module is defined so that each hidden layer can be fed as an input of MLP (here a single layer was utilized though) whose final size is the same as *the context vector*, 64 (*hidden_con*), to make up *r_att*. Next, from an attention source *zeros*, an attention vector *att_vec* is yielded by MLP, with the size of *hidden_con*, and is multiplied column-wisely to *r_att*! This finally makes up an attention vector that is recursively multiplied to the hidden layer sequence to yield the weighted sum. The rest are the same, but due to the model being large, we raised the number of epochs to 50. The same callback functions were utilized as in the last chapter since we utilized two inputs, RNN dataset and attention source (zeros).
+
 ## 11. BERT and after
