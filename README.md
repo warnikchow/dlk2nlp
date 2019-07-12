@@ -606,7 +606,7 @@ fci_conv = featurize_cnn(fci_sp_token_train+fci_sp_token_test,100,30)
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/ykim14.png" width="700"><br/>
-    (image from [Kim 2014](https://arxiv.org/abs/1408.5882))
+    (image from Kim 2014)
 
 * 이것이 문장 분류에 어떻게 사용되느냐? 가장 먼저 거치는 과정은 쉽게 말해 문장을 그림처럼 바꾸는 겁니다. 즉, 단일 채널 matrix를 만드는 거죠 (그림은 보통 rgb의 3 channel). 우린 sentence matrix란 걸 논한 적 없으니 word vector들로 어떻게 해 봐야 될 텐데, word vector나 TF-IDF를 가지고는 듬성듬성하게 nonzero가 박혀 있는 것들밖에 만들지 못할 테죠. 애초에 값에 대한 위치 bias가 없는 녀석들이니 순서(order)적인 것 외에 아무 정보도 CNN에 주지는 못할 겁니다.
 
@@ -1360,10 +1360,6 @@ Epoch 13/30
 
 The second to the final step is applying 'the' attention mechanism, which has shifted paradigm of deep learning architectures, and still shifting... Many will be familiar with the [attention model](https://arxiv.org/abs/1409.0473) which came out along with [RNN encoder-decoder](https://arxiv.org/abs/1406.1078), or the self-attention which was suggested in [Transformer](http://papers.nips.cc/paper/7181-attention-is-all-you-need), which deals with seq2seq-style problems such as machine translation. Though the inherit philosophy may be consistent, here, we introduce a [structured self attentive embedding](https://arxiv.org/abs/1703.03130) which was suggested for an effective sentence classification.
 
-<p align="center">
-    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/selfAA.png" width="700"><br/>
-    (image from [Lin 2017](https://arxiv.org/abs/1703.03130))
-
 The key idea in this paper is to train an additional attention layer that assigns weight to each hidden layer of the BiLSTM structure. For this, a context vector of the size same as the hidden layer width, i.e. 64 as will be implemented, is separately defined and jointly trained, in the manner that **it is column-wisely multiplied with the MLP from each hidden layer to yield the attention vector**. The attention vector is recursively multiplied to the hidden layers so that the weighted sum becomes the final summarization for the fine-tuning. The code is implemented below; with the new function *lambda* which enables us to customize the layers in somewhat sophiscated ways. We also need to import the backend of Keras, here TensorFlow, for the layer-level and specific operations.
 
 ```python
@@ -1401,5 +1397,13 @@ def validate_rnn_self_drop(x_rnn,x_y,hidden_lstm,hidden_con,hidden_dim,cw,val_sp
 ```
 
 At the very beginning of the code, BiLSTM module is defined so that each hidden layer can be fed as an input of MLP (here a single layer was utilized though) whose final size is the same as *the context vector*, 64 (*hidden_con*), to make up *r_att*. Next, from an attention source *zeros*, an attention vector *att_vec* is yielded by MLP, with the size of *hidden_con*, and is multiplied column-wisely to *r_att*! This finally makes up an attention vector that is recursively multiplied to the hidden layer sequence to yield the weighted sum. The rest are the same, but due to the model being large, we raised the number of epochs to 50. The same callback functions were utilized as in the last chapter since we utilized two inputs, RNN dataset and attention source (zeros).
+
+<p align="center">
+    <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/selfAA.png" width="700"><br/>
+    (image from Lin 2017)
+	 	 
+요즘, 아니 꽤 오랫동안 NLP와 ML에서 혁신을 가져왔던 attention mechanism을 이제서야 만나볼 수 있게 되었습니다. 많은 분들이 익숙하신 내용은 주로 machine translation과 함께 사용되었던 [attention model](https://arxiv.org/abs/1409.0473)이나 Transformer의 [self attention](http://papers.nips.cc/paper/7181-attention-is-all-you-need)일 텐데요, 여기서는 비슷한 시기에 sentence classification task를 위해 등장한 structured self-attentive embedding을 살펴보도록 하겠습니다. self attention이 나온다기는 좀 뭐하지만, attention vector을 활용하여 sentence classification에 사용되는 latent variable들에 정보를 주는데, 그 source가 자기 자신이라는 점이 self-attention과 유사한 측면이 있다고 생각됩니다.
+
+---
 
 ## 11. BERT and after
