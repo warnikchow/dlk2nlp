@@ -1356,7 +1356,7 @@ Epoch 13/30
 
 어... vanilla BiLSTM보다 성능이 떨어졌네요 ㅎㅎ 뭐 그럴수도 있죠... 아무래도 CNN과 BiLSTM이 infer하는 과정에서 양상이 달라, jointly training에서는 혼선이 생긴 것이 아닌가 싶습니다. model을 merge하는 것이 꼭 좋은 결과를 가져오지는 않는 것 같아요. 다음 장에서는 backend인 tensorflow를 끌어 와서 self-attentive BiLSTM을 구현해 보도록 하겠습니다.
 
-## 10. BiLSTM Self-attention
+## 10. Self-attentive BiLSTM
 
 The second to the final step is applying 'the' attention mechanism, which has shifted paradigm of deep learning architectures, and still shifting... Many will be familiar with the [attention model](https://arxiv.org/abs/1409.0473) which came out along with [RNN encoder-decoder](https://arxiv.org/abs/1406.1078), or the self-attention which was suggested in [Transformer](http://papers.nips.cc/paper/7181-attention-is-all-you-need), which deals with seq2seq-style problems such as machine translation. Though the inherit philosophy may be consistent, here, we introduce a [structured self attentive embedding](https://arxiv.org/abs/1703.03130) which was suggested for an effective sentence classification.
 
@@ -1406,4 +1406,4 @@ At the very beginning of the code, BiLSTM module is defined so that each hidden 
 
 ---
 
-## 11. BERT and after
+## 11. Transformer, BERT, and after
