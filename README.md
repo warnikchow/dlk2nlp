@@ -36,7 +36,7 @@ fasttext (Gensim if inavailable), Keras, konlpy (refer to the [documentation](ht
 [7. RNN (BiLSTM)-based sentence classification](https://github.com/warnikchow/dlk2nlp#7-rnn-bilstm-based-sentence-classification)</br>
 [8. Character embedding](https://github.com/warnikchow/dlk2nlp#8-character-embedding)</br>
 [9. Concatenation of CNN and RNN layers](https://github.com/warnikchow/dlk2nlp#9-concatenation-of-cnn-and-rnn-layers)</br>
-[10. BiLSTM Self-attention](https://github.com/warnikchow/dlk2nlp#10-self-attentive-bilstm)</br>
+[10. Self-attentive BiLSTM](https://github.com/warnikchow/dlk2nlp#10-self-attentive-bilstm)</br>
 [11. Transformer, BERT, and after](https://github.com/warnikchow/dlk2nlp#11-transformer-bert-and-after)
 
 ## 0. Corpus labeling
