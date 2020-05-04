@@ -586,7 +586,7 @@ Epoch 29/30
 
 ---
 
-However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Unlike the previous approach where all the information of the words in the sentence are aggregated into a single vector, the featurization for CNN has its limitation in the volume. Thus, here we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.
+**However, since the very classic breakthrough of [Kim 2014](https://arxiv.org/abs/1408.5882), CNN has been widely used in the text processing, understanding the word vector sequence as a single channel image. Unlike the previous approach where all the information of the words in the sentence are aggregated into a single vector, the featurization for CNN has its limitation in the volume. Thus, here we restrict the maximum length of the morpheme sequence to 30, with zero-padding for the short utterances. Taking into account the head-finality of Korean, we decided to place the word vectors on the right side of the matrix. That is, for the long utterances, only the last 30 morphemes are utilized.**
 
 ```python
 def featurize_cnn(corpus,wdim,maxlen):
@@ -707,7 +707,7 @@ Epoch 8/30
 
 ## 7. RNN (BiLSTM)-based sentence classification
 
-****Recurrent neural network (RNN)*, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [*long short-term memory (LSTM)*](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).**
+***Recurrent neural network (RNN)*, which was suggested originally in the late 20th century, is a representative network that reflects the sequential information in the numerical summarization. Due to high-computation issue, its materialization has recently been possible with the help of modern computing systems (e.g. GPU boost-up). The problem of vanishing gradient has been partially solved by [*long short-term memory (LSTM)*](https://www.mitpressjournals.org/doi/abs/10.1162/neco.1997.9.8.1735), whose direction-bias was improved along with the bidirectional sequencing (BiLSTM).**
 
 <p align="center">
     <image src="https://github.com/warnikchow/dlk2nlp/blob/master/image/rnn.jpg" width="700"><br/>
@@ -1162,7 +1162,7 @@ Epoch 35/50
 
 ## 9. Concatenation of CNN and RNN layers
 
-Now, we get back to the morpheme-based approaches. Here, for the first time we customize the layers for a new implementation! The procedure is the most simple one, a concatenation of two separate networks. We've done with CNN and RNN(BiLSTM)-based approaches so far, thus, a concatenation of the two systems will be executed. Beyond simply putting *model.xxx*, we need some unseen module at this point, **Model**. This helps make in-out of the customized layers.
+**Now, we get back to the morpheme-based approaches. Here, for the first time we customize the layers for a new implementation! The procedure is the most simple one, a concatenation of two separate networks. We've done with CNN and RNN(BiLSTM)-based approaches so far, thus, a concatenation of the two systems will be executed. Beyond simply putting *model.xxx*, we need some unseen module at this point, *Model*. This helps make in-out of the customized layers.**
 
 ```python
 from keras.models import Model
