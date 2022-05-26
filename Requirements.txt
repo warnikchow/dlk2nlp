@@ -4,4 +4,4 @@ konlpy==0.4.4
 nltk==3.3
 numpy==1.14.3
 scikit-learn==0.19.1
-tensorflow-gpu==1.4.1
+tensorflow-gpu==2.7.2
